@@ -1,0 +1,29 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\BrandController;
+use App\Http\Controllers\Api\KategoriController;
+use App\Http\Controllers\Api\MetodePembayaranController;
+use App\Http\Controllers\Api\ProdukController;
+use App\Http\Controllers\Api\TransaksiController;
+
+// Group Auth
+Route::group(['middleware' => 'api', 'prefix' => 'auth'], function () {
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('logout', [AuthController::class, 'logout']);
+    Route::post('refresh', [AuthController::class, 'refresh']);
+    Route::post('me', [AuthController::class, 'me']);
+});
+
+// Group API Resources (Bisa dikunci pakai middleware auth:api jika mau)
+Route::middleware('auth:api')->group(function () {
+    Route::apiResource('roles', RoleController::class);
+    Route::apiResource('brands', BrandController::class);
+    Route::apiResource('kategori', KategoriController::class);
+    Route::apiResource('metode-pembayaran', MetodePembayaranController::class);
+    Route::apiResource('produk', ProdukController::class);
+    Route::apiResource('transaksi', TransaksiController::class);
+});
