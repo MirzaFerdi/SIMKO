@@ -50,9 +50,10 @@ class AuthController extends Controller
         $credentials = request(['username', 'password']);
 
         if (! $token = auth()->attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized / Password Salah'], 401);
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
 
+        // Panggil method helper respon dengan cookie
         return $this->respondWithToken($token);
     }
 
@@ -66,7 +67,12 @@ class AuthController extends Controller
     public function logout()
     {
         auth()->logout();
-        return response()->json(['message' => 'Successfully logged out']);
+
+        // Hapus cookie saat logout
+        $cookie = cookie()->forget('token');
+
+        return response()->json(['message' => 'Successfully logged out'])
+            ->withCookie($cookie);
     }
 
     // REFRESH
@@ -84,5 +90,25 @@ class AuthController extends Controller
             'expires_in'   => auth()->factory()->getTTL() * 60,
             'user'         => auth()->user()
         ]);
+    }
+
+    protected function respondWithToken($token)
+    {
+        $cookie = cookie(
+            'token',
+            $token,
+            60 * 24,
+            '/',
+            null,
+            true,
+            true,
+            false,
+            'None'
+        );
+
+        return response()->json([
+            'success' => true,
+            'user'    => auth()->user(),
+        ])->withCookie($cookie);
     }
 }
