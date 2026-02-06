@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\ProdukController;
 use App\Http\Controllers\Api\TransaksiController;
 
 // Group Auth
+// Jika mau akses auth ini harus pakai /auth setelah /api cikk
 Route::group(['middleware' => 'api', 'prefix' => 'auth'], function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
@@ -18,7 +19,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'auth'], function () {
     Route::post('me', [AuthController::class, 'me']);
 });
 
-// Group API Resources (Bisa dikunci pakai middleware auth:api jika mau)
+// ini akses seperti biasanya, harus setelah login dengan ada bearer token
 Route::middleware('auth:api')->group(function () {
     Route::apiResource('roles', RoleController::class);
     Route::apiResource('brands', BrandController::class);

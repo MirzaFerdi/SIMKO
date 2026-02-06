@@ -30,22 +30,19 @@ class DatabaseSeeder extends Seeder
             // ------------------------------------------------------------------
 
             // Buat Role
-            $roleAdmin = Role::create(['nama_role' => 'Administrator']);
+            $roleAdmin = Role::create(['nama_role' => 'admin']);
             $roleKasir = Role::create(['nama_role' => 'Kasir']);
 
             $this->command->info('✅ Role berhasil dibuat.');
 
             // Buat Kategori
-            $catElektronik = Kategori::create(['nama_kategori' => 'Elektronik']);
-            $catFnb        = Kategori::create(['nama_kategori' => 'Makanan & Minuman']);
-            $catFashion    = Kategori::create(['nama_kategori' => 'Fashion']);
-            $catKeuangan   = Kategori::create(['nama_kategori' => 'Keuangan Digital']); // Kategori khusus metode bayar
+            $umum = Kategori::create(['nama_kategori' => 'Umum']);
+            $khusus        = Kategori::create(['nama_kategori' => 'Khusus']);
 
             // Buat Brand
-            $brandSamsung  = Brand::create(['nama_brand' => 'Samsung']);
-            $brandIndofood = Brand::create(['nama_brand' => 'Indofood']);
-            $brandNike     = Brand::create(['nama_brand' => 'Nike']);
-            $brandApple    = Brand::create(['nama_brand' => 'Apple']); // Brand tanpa produk (untuk tes)
+            $sampoerna  = Brand::create(['nama_brand' => 'Sampoerna']);
+            $gudangGaram = Brand::create(['nama_brand' => 'Gudang Garam']);
+            $dJarum     = Brand::create(['nama_brand' => 'Djarum']);
 
             $this->command->info('✅ Data Master (Kategori & Brand) berhasil dibuat.');
 
@@ -74,19 +71,19 @@ class DatabaseSeeder extends Seeder
             // ------------------------------------------------------------------
 
             // Kita hubungkan ke kategori 'Keuangan Digital'
-            $payCash = MetodePembayaran::create([
-                'kategori_id' => $catKeuangan->id,
+            $umumCash = MetodePembayaran::create([
+                'kategori_id' => $umum->id,
                 'nama_metode' => 'Tunai / Cash'
             ]);
 
-            $payQris = MetodePembayaran::create([
-                'kategori_id' => $catKeuangan->id,
+            $umumQris = MetodePembayaran::create([
+                'kategori_id' => $umum->id,
                 'nama_metode' => 'QRIS'
             ]);
 
-            $payTransfer = MetodePembayaran::create([
-                'kategori_id' => $catKeuangan->id,
-                'nama_metode' => 'Transfer Bank'
+            $khususBon = MetodePembayaran::create([
+                'kategori_id' => $khusus->id,
+                'nama_metode' => 'BON'
             ]);
 
             // ------------------------------------------------------------------
@@ -94,27 +91,27 @@ class DatabaseSeeder extends Seeder
             // ------------------------------------------------------------------
 
             $prod1 = Produk::create([
-                'brand_id'    => $brandSamsung->id,
-                'kategori_id' => $catElektronik->id,
-                'nama_produk' => 'Samsung Galaxy S24',
-                'harga'       => 15000000,
-                'stok'        => 10 // Stok awal
+                'brand_id'    => $gudangGaram->id,
+                'kategori_id' => $umum->id,
+                'nama_produk' => 'Gudang Garam International',
+                'harga'       => 28000,
+                'stok'        => 10
             ]);
 
             $prod2 = Produk::create([
-                'brand_id'    => $brandIndofood->id,
-                'kategori_id' => $catFnb->id,
-                'nama_produk' => 'Indomie Goreng Jumbo',
-                'harga'       => 3500,
-                'stok'        => 100 // Stok awal
+                'brand_id'    => $sampoerna->id,
+                'kategori_id' => $khusus->id,
+                'nama_produk' => 'Dji Sam Soe',
+                'harga'       => 15000,
+                'stok'        => 25 // Stok awal
             ]);
 
             $prod3 = Produk::create([
-                'brand_id'    => $brandNike->id,
-                'kategori_id' => $catFashion->id,
-                'nama_produk' => 'Nike Air Jordan',
-                'harga'       => 2500000,
-                'stok'        => 5 // Stok awal
+                'brand_id'    => $dJarum->id,
+                'kategori_id' => $umum->id,
+                'nama_produk' => 'LA Bold',
+                'harga'       => 40000,
+                'stok'        => 16 // Stok awal
             ]);
 
             $this->command->info('✅ Produk berhasil dibuat.');
@@ -132,7 +129,7 @@ class DatabaseSeeder extends Seeder
                 'kategori_id'          => $prod2->kategori_id,  // Kategori produk saat itu
                 'brand_id'             => $prod2->brand_id,     // Brand produk saat itu
                 'produk_id'            => $prod2->id,           // Produk apa
-                'metode_pembayaran_id' => $payCash->id,         // Bayar pakai apa
+                'metode_pembayaran_id' => $umumCash->id,         // Bayar pakai apa
                 'nama_pelanggan'       => 'Budi Santoso',
                 'tanggal'              => now(),
                 'harga'                => $prod2->harga,        // Harga saat transaksi terjadi
@@ -155,7 +152,7 @@ class DatabaseSeeder extends Seeder
                 'kategori_id'          => $prod3->kategori_id,
                 'brand_id'             => $prod3->brand_id,
                 'produk_id'            => $prod3->id,
-                'metode_pembayaran_id' => $payQris->id,
+                'metode_pembayaran_id' => $umumQris->id,
                 'nama_pelanggan'       => 'Siti Aminah',
                 'tanggal'              => now()->subDay(),      // Transaksi dibuat kemarin
                 'harga'                => $prod3->harga,
