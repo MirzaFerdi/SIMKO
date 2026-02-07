@@ -11,10 +11,9 @@ class MetodePembayaranController extends Controller
 {
     public function index()
     {
-        // Include relasi kategori
         return response()->json([
             'success' => true,
-            'data'    => MetodePembayaran::with('kategori')->latest()->get()
+            'data'    => MetodePembayaran::with('kategori')->orderBy('id')->get()
         ]);
     }
 
@@ -35,14 +34,14 @@ class MetodePembayaranController extends Controller
     public function show($id)
     {
         $data = MetodePembayaran::with('kategori')->find($id);
-        if (!$data) return response()->json(['success' => false, 'message' => 'Data not found'], 404);
+        if (!$data) return response()->json(['success' => false, 'message' => 'Metode Pembayaran Tidak Ditemukan'], 404);
         return response()->json(['success' => true, 'data' => $data]);
     }
 
     public function update(Request $request, $id)
     {
         $data = MetodePembayaran::find($id);
-        if (!$data) return response()->json(['success' => false, 'message' => 'Data not found'], 404);
+        if (!$data) return response()->json(['success' => false, 'message' => 'Metode Pembayaran Tidak Ditemukan'], 404);
 
         $validator = Validator::make($request->all(), [
             'kategori_id' => 'exists:kategori,id',
@@ -58,9 +57,9 @@ class MetodePembayaranController extends Controller
     public function destroy($id)
     {
         $data = MetodePembayaran::find($id);
-        if (!$data) return response()->json(['success' => false, 'message' => 'Data not found'], 404);
+        if (!$data) return response()->json(['success' => false, 'message' => 'Metode Pembayaran Tidak Ditemukan'], 404);
 
         $data->delete();
-        return response()->json(['success' => true, 'message' => 'Data deleted']);
+        return response()->json(['success' => true, 'message' => 'Metode Pembayaran Berhasil Dihapus']);
     }
 }

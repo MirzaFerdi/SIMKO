@@ -71,7 +71,7 @@ class AuthController extends Controller
         // Hapus cookie saat logout
         $cookie = cookie()->forget('token');
 
-        return response()->json(['message' => 'Successfully logged out'])
+        return response()->json(['message' => 'Logout berhasil'])
             ->withCookie($cookie);
     }
 
@@ -82,15 +82,15 @@ class AuthController extends Controller
     }
 
     // HELPER TOKEN
-    protected function respondWithToken($token)
-    {
-        return response()->json([
-            'access_token' => $token,
-            'token_type'   => 'bearer',
-            'expires_in'   => auth()->factory()->getTTL() * 60,
-            'user'         => auth()->user()
-        ]);
-    }
+    // protected function respondWithToken($token)
+    // {
+    //     return response()->json([
+    //         'access_token' => $token,
+    //         'token_type'   => 'bearer',
+    //         'expires_in'   => auth()->factory()->getTTL() * 99999,
+    //         'user'         => auth()->user()
+    //     ]);
+    // }
 
     protected function respondWithToken($token)
     {

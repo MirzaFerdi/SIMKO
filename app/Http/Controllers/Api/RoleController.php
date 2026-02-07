@@ -13,7 +13,7 @@ class RoleController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data'    => Role::latest()->get()
+            'data'    => Role::orderBy('id')->get()
         ]);
     }
 
@@ -33,14 +33,14 @@ class RoleController extends Controller
     public function show($id)
     {
         $role = Role::find($id);
-        if (!$role) return response()->json(['success' => false, 'message' => 'Data not found'], 404);
+        if (!$role) return response()->json(['success' => false, 'message' => 'Role Tidak Ditemukan'], 404);
         return response()->json(['success' => true, 'data' => $role]);
     }
 
     public function update(Request $request, $id)
     {
         $role = Role::find($id);
-        if (!$role) return response()->json(['success' => false, 'message' => 'Data not found'], 404);
+        if (!$role) return response()->json(['success' => false, 'message' => 'Role Tidak Ditemukan'], 404);
 
         $role->update($request->all());
         return response()->json(['success' => true, 'data' => $role]);
@@ -49,9 +49,9 @@ class RoleController extends Controller
     public function destroy($id)
     {
         $role = Role::find($id);
-        if (!$role) return response()->json(['success' => false, 'message' => 'Data not found'], 404);
+        if (!$role) return response()->json(['success' => false, 'message' => 'Role Tidak Ditemukan'], 404);
 
         $role->delete();
-        return response()->json(['success' => true, 'message' => 'Data deleted']);
+        return response()->json(['success' => true, 'message' => 'Role Berhasil Dihapus']);
     }
 }

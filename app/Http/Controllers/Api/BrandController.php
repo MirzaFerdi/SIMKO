@@ -13,7 +13,7 @@ class BrandController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data'    => Brand::latest()->get()
+            'data'    => Brand::orderBy('id')->get()
         ]);
     }
 
@@ -33,14 +33,14 @@ class BrandController extends Controller
     public function show($id)
     {
         $brand = Brand::find($id);
-        if (!$brand) return response()->json(['success' => false, 'message' => 'Data not found'], 404);
+        if (!$brand) return response()->json(['success' => false, 'message' => 'Brand Tidak Ditemukan'], 404);
         return response()->json(['success' => true, 'data' => $brand]);
     }
 
     public function update(Request $request, $id)
     {
         $brand = Brand::find($id);
-        if (!$brand) return response()->json(['success' => false, 'message' => 'Data not found'], 404);
+        if (!$brand) return response()->json(['success' => false, 'message' => 'Brand Tidak Ditemukan'], 404);
 
         $brand->update($request->all());
         return response()->json(['success' => true, 'data' => $brand]);
@@ -49,9 +49,9 @@ class BrandController extends Controller
     public function destroy($id)
     {
         $brand = Brand::find($id);
-        if (!$brand) return response()->json(['success' => false, 'message' => 'Data not found'], 404);
+        if (!$brand) return response()->json(['success' => false, 'message' => 'Brand Tidak Ditemukan'], 404);
 
         $brand->delete();
-        return response()->json(['success' => true, 'message' => 'Data deleted']);
+        return response()->json(['success' => true, 'message' => 'Brand Berhasil Dihapus']);
     }
 }

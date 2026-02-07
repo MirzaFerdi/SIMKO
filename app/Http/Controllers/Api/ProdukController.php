@@ -14,7 +14,7 @@ class ProdukController extends Controller
         // Load relasi brand dan kategori
         return response()->json([
             'success' => true,
-            'data'    => Produk::with(['brand', 'kategori'])->latest()->get()
+            'data'    => Produk::with(['brand', 'kategori'])->orderBy('id')->get()
         ]);
     }
 
@@ -38,14 +38,14 @@ class ProdukController extends Controller
     public function show($id)
     {
         $produk = Produk::with(['brand', 'kategori'])->find($id);
-        if (!$produk) return response()->json(['success' => false, 'message' => 'Data not found'], 404);
+        if (!$produk) return response()->json(['success' => false, 'message' => 'Produk Tidak Ditemukan'], 404);
         return response()->json(['success' => true, 'data' => $produk]);
     }
 
     public function update(Request $request, $id)
     {
         $produk = Produk::find($id);
-        if (!$produk) return response()->json(['success' => false, 'message' => 'Data not found'], 404);
+        if (!$produk) return response()->json(['success' => false, 'message' => 'Produk Tidak Ditemukan'], 404);
 
         $produk->update($request->all());
         return response()->json(['success' => true, 'data' => $produk]);
@@ -54,9 +54,9 @@ class ProdukController extends Controller
     public function destroy($id)
     {
         $produk = Produk::find($id);
-        if (!$produk) return response()->json(['success' => false, 'message' => 'Data not found'], 404);
+        if (!$produk) return response()->json(['success' => false, 'message' => 'Produk Tidak Ditemukan'], 404);
 
         $produk->delete();
-        return response()->json(['success' => true, 'message' => 'Data deleted']);
+        return response()->json(['success' => true, 'message' => 'Produk Berhasil Dihapus']);
     }
 }

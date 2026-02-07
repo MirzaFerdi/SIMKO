@@ -13,7 +13,7 @@ class KategoriController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data'    => Kategori::latest()->get()
+            'data'    => Kategori::orderBy('id')->get()
         ]);
     }
 
@@ -33,14 +33,14 @@ class KategoriController extends Controller
     public function show($id)
     {
         $kategori = Kategori::find($id);
-        if (!$kategori) return response()->json(['success' => false, 'message' => 'Data not found'], 404);
+        if (!$kategori) return response()->json(['success' => false, 'message' => 'Kategori Tidak Ditemukan'], 404);
         return response()->json(['success' => true, 'data' => $kategori]);
     }
 
     public function update(Request $request, $id)
     {
         $kategori = Kategori::find($id);
-        if (!$kategori) return response()->json(['success' => false, 'message' => 'Data not found'], 404);
+        if (!$kategori) return response()->json(['success' => false, 'message' => 'Kategori Tidak Ditemukan'], 404);
 
         $kategori->update($request->all());
         return response()->json(['success' => true, 'data' => $kategori]);
@@ -49,9 +49,9 @@ class KategoriController extends Controller
     public function destroy($id)
     {
         $kategori = Kategori::find($id);
-        if (!$kategori) return response()->json(['success' => false, 'message' => 'Data not found'], 404);
+        if (!$kategori) return response()->json(['success' => false, 'message' => 'Kategori Tidak Ditemukan'], 404);
 
         $kategori->delete();
-        return response()->json(['success' => true, 'message' => 'Data deleted']);
+        return response()->json(['success' => true, 'message' => 'Kategori Berhasil Dihapus']);
     }
 }

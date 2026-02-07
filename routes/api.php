@@ -21,8 +21,8 @@ Route::group(['middleware' => 'api', 'prefix' => 'auth'], function () {
 
 // ini akses seperti biasanya, harus setelah login dengan ada bearer token
 Route::middleware('auth:api')->group(function () {
-    Route::apiResource('roles', RoleController::class);
-    Route::apiResource('brands', BrandController::class);
+    Route::apiResource('role', RoleController::class);
+    Route::apiResource('brand', BrandController::class);
     Route::apiResource('kategori', KategoriController::class);
     Route::apiResource('metode-pembayaran', MetodePembayaranController::class);
     Route::apiResource('produk', ProdukController::class);
