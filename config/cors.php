@@ -20,7 +20,7 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'http://localhost:4200', 'http://192.168.1.7:4200'
+        'http://localhost:4200', 'http://192.168.1.7:4200', 'https://localhost:4200'
     ],
 
     'allowed_origins_patterns' => [],

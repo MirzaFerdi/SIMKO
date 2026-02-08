@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller; // Pastikan baris ini ada
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -12,6 +12,7 @@ class AuthController extends Controller
 {
     public function __construct()
     {
+        // Middleware auth:api kecuali untuk login & register
         // $this->middleware('auth:api', ['except' => ['login', 'register']]);
     }
 
@@ -40,7 +41,7 @@ class AuthController extends Controller
         ], 201);
     }
 
-    // LOGIN
+    // LOGIN (Kembali ke Standard)
     public function login()
     {
         $credentials = request(['username', 'password']);
@@ -58,48 +59,27 @@ class AuthController extends Controller
         return response()->json(auth()->user());
     }
 
-    // LOGOUT
+    // LOGOUT (Hapus Token di Server)
     public function logout()
     {
         auth()->logout();
-
-        $cookie = cookie()->forget('token');
-
-        return response()->json(['message' => 'Logout berhasil'])
-            ->withCookie($cookie);
+        return response()->json(['message' => 'Successfully logged out']);
     }
 
-    // REFRESH
+    // REFRESH (Generate Token Baru)
     public function refresh()
     {
         return $this->respondWithToken(auth()->refresh());
     }
 
-    // protected function respondWithToken($token)
-    // {
-    //     return response()->json([
-    //         'access_token' => $token,
-    //         'token_type'   => 'bearer',
-    //         'expires_in'   => auth()->factory()->getTTL() * 99999,
-    //         'user'         => auth()->user()
-    //     ]);
-    // }
-
+    // HELPER RESPONSE (Tanpa Cookie)
     protected function respondWithToken($token)
     {
-        $cookie = cookie(
-            'token',
-            $token,
-            60 * 24,
-            '/',
-            null,
-            false,
-            true
-        );
-
         return response()->json([
-            'success' => true,
-            'user'    => auth()->user(),
-        ])->withCookie($cookie);
+            'access_token' => $token,           // Token dikirim disini
+            'token_type'   => 'bearer',
+            'expires_in'   => auth()->factory()->getTTL() * 60,
+            'user'         => auth()->user()
+        ]);
     }
 }
