@@ -12,9 +12,6 @@ class AuthController extends Controller
 {
     public function __construct()
     {
-        // Middleware auth:api
-        // Catatan: Di Laravel 11/12, jika guard 'api' belum diset sempurna,
-        // kadang middleware ini bisa memblokir. Jika error, bisa dikomentari dulu.
         // $this->middleware('auth:api', ['except' => ['login', 'register']]);
     }
 
@@ -22,7 +19,6 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            // PERBAIKAN: Ubah 'tb_user' menjadi 'user' sesuai migrasi terakhir
             'username' => 'required|unique:user',
             'password' => 'required|min:6',
             'role_id'  => 'required|integer'
@@ -53,7 +49,6 @@ class AuthController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        // Panggil method helper respon dengan cookie
         return $this->respondWithToken($token);
     }
 
@@ -68,7 +63,6 @@ class AuthController extends Controller
     {
         auth()->logout();
 
-        // Hapus cookie saat logout
         $cookie = cookie()->forget('token');
 
         return response()->json(['message' => 'Logout berhasil'])
@@ -81,7 +75,6 @@ class AuthController extends Controller
         return $this->respondWithToken(auth()->refresh());
     }
 
-    // HELPER TOKEN
     // protected function respondWithToken($token)
     // {
     //     return response()->json([
@@ -100,10 +93,8 @@ class AuthController extends Controller
             60 * 24,
             '/',
             null,
-            true,
-            true,
             false,
-            'None'
+            true
         );
 
         return response()->json([

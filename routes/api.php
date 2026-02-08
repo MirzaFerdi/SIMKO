@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\KategoriController;
 use App\Http\Controllers\Api\MetodePembayaranController;
 use App\Http\Controllers\Api\ProdukController;
 use App\Http\Controllers\Api\TransaksiController;
+use App\Http\Controllers\Api\LaporanController;
 
 // Group Auth
 // Jika mau akses auth ini harus pakai /auth setelah /api cikk
@@ -27,4 +28,5 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('metode-pembayaran', MetodePembayaranController::class);
     Route::apiResource('produk', ProdukController::class);
     Route::apiResource('transaksi', TransaksiController::class);
+    Route::get('laporan/rekap', [LaporanController::class, 'rekap']);
 });
