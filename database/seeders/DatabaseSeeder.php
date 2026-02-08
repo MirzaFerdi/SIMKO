@@ -9,6 +9,7 @@ use App\Models\MetodePembayaran;
 use App\Models\Produk;
 use App\Models\Role;
 use App\Models\Transaksi;
+use App\Models\TransaksiDetail; // Tambahkan Model Ini
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -36,13 +37,13 @@ class DatabaseSeeder extends Seeder
             $this->command->info('✅ Role berhasil dibuat.');
 
             // Buat Kategori
-            $umum = Kategori::create(['nama_kategori' => 'Umum']);
-            $khusus        = Kategori::create(['nama_kategori' => 'Khusus']);
+            $umum   = Kategori::create(['nama_kategori' => 'Umum']);
+            $khusus = Kategori::create(['nama_kategori' => 'Khusus']);
 
             // Buat Brand
-            $sampoerna  = Brand::create(['nama_brand' => 'Sampoerna']);
+            $sampoerna   = Brand::create(['nama_brand' => 'Sampoerna']);
             $gudangGaram = Brand::create(['nama_brand' => 'Gudang Garam']);
-            $dJarum     = Brand::create(['nama_brand' => 'Djarum']);
+            $dJarum      = Brand::create(['nama_brand' => 'Djarum']);
 
             $this->command->info('✅ Data Master (Kategori & Brand) berhasil dibuat.');
 
@@ -70,7 +71,7 @@ class DatabaseSeeder extends Seeder
             // 3. DATA PENDUKUNG (Metode Pembayaran)
             // ------------------------------------------------------------------
 
-            // Kita hubungkan ke kategori 'Keuangan Digital'
+            // Kita hubungkan ke kategori 'Umum' (sebagai contoh kategori keuangan)
             $umumCash = MetodePembayaran::create([
                 'kategori_id' => $umum->id,
                 'nama_metode' => 'Tunai / Cash'
@@ -117,51 +118,73 @@ class DatabaseSeeder extends Seeder
             $this->command->info('✅ Produk berhasil dibuat.');
 
             // ------------------------------------------------------------------
-            // 5. DATA TRANSAKSI (Simulasi Penjualan)
+            // 5. DATA TRANSAKSI (Simulasi Penjualan Header & Detail)
             // ------------------------------------------------------------------
 
-            // --- Transaksi 1: Kasir menjual 5 Indomie secara Tunai ---
+            // --- Transaksi 1: Kasir menjual 5 Dji Sam Soe secara Tunai ---
             $qty1 = 5;
-            $total1 = $prod2->harga * $qty1; // 3500 * 5 = 17500
+            $harga1 = $prod2->harga; // 15.000
+            $subtotal1 = $harga1 * $qty1; // 75.000
 
-            Transaksi::create([
-                'user_id'              => $userKasir->id,       // Siapa kasirnya
-                'kategori_id'          => $prod2->kategori_id,  // Kategori produk saat itu
-                'brand_id'             => $prod2->brand_id,     // Brand produk saat itu
-                'produk_id'            => $prod2->id,           // Produk apa
-                'metode_pembayaran_id' => $umumCash->id,         // Bayar pakai apa
+            // Anggap user bayar 100.000 (disesuaikan agar kembalian positif)
+            $uangBayar1 = 100000;
+
+            // A. Buat Header Transaksi
+            $transaksi1 = Transaksi::create([
+                'user_id'              => $userKasir->id,
+                'kategori_id'          => $prod2->kategori_id, // Mengambil kategori pelanggan dari produk (Khusus)
+                'metode_pembayaran_id' => $umumCash->id,
                 'nama_pelanggan'       => 'Budi Santoso',
                 'tanggal'              => now(),
-                'harga'                => $prod2->harga,        // Harga saat transaksi terjadi
-                'qty'                  => $qty1,
-                'total'                => $total1,
-                'kembalian'            => 20000 - $total1,      // Bayar 20.000, hitung kembalian
-                'status'               => 'selesai'
+                'total'                => $subtotal1,
+                'bayar'                => $uangBayar1,
+                'kembalian'            => $uangBayar1 - $subtotal1,
+                'status'               => 'success'
             ]);
 
-            // Jangan lupa kurangi stok produk karena ini simulasi transaksi sukses
+            // B. Buat Detail Transaksi
+            TransaksiDetail::create([
+                'transaksi_id' => $transaksi1->id,
+                'produk_id'    => $prod2->id,
+                'brand_id'     => $prod2->brand_id, // PENTING: Brand disimpan di detail untuk rekap
+                'harga'        => $harga1,
+                'qty'          => $qty1,
+                'subtotal'     => $subtotal1
+            ]);
+
+            // C. Kurangi Stok
             $prod2->decrement('stok', $qty1);
 
 
-            // --- Transaksi 2: Kasir menjual 1 Sepatu Nike via QRIS (Kemarin) ---
+            // --- Transaksi 2: Kasir menjual 1 LA Bold via QRIS (Kemarin) ---
             $qty2 = 1;
-            $total2 = $prod3->harga * $qty2;
+            $harga2 = $prod3->harga; // 40.000
+            $subtotal2 = $harga2 * $qty2;
 
-            Transaksi::create([
+            // A. Buat Header Transaksi
+            $transaksi2 = Transaksi::create([
                 'user_id'              => $userKasir->id,
-                'kategori_id'          => $prod3->kategori_id,
-                'brand_id'             => $prod3->brand_id,
-                'produk_id'            => $prod3->id,
+                'kategori_id'          => $prod3->kategori_id, // Kategori Umum
                 'metode_pembayaran_id' => $umumQris->id,
                 'nama_pelanggan'       => 'Siti Aminah',
-                'tanggal'              => now()->subDay(),      // Transaksi dibuat kemarin
-                'harga'                => $prod3->harga,
-                'qty'                  => $qty2,
-                'total'                => $total2,
-                'kembalian'            => 0,                    // Uang pas kalau QRIS
-                'status'               => 'selesai'
+                'tanggal'              => now()->subDay(),
+                'total'                => $subtotal2,
+                'bayar'                => $subtotal2, // Uang pas QRIS
+                'kembalian'            => 0,
+                'status'               => 'success'
             ]);
 
+            // B. Buat Detail Transaksi
+            TransaksiDetail::create([
+                'transaksi_id' => $transaksi2->id,
+                'produk_id'    => $prod3->id,
+                'brand_id'     => $prod3->brand_id,
+                'harga'        => $harga2,
+                'qty'          => $qty2,
+                'subtotal'     => $subtotal2
+            ]);
+
+            // C. Kurangi Stok
             $prod3->decrement('stok', $qty2);
 
             DB::commit();
@@ -169,7 +192,6 @@ class DatabaseSeeder extends Seeder
 
         } catch (\Exception $e) {
             DB::rollBack();
-            // Tampilkan pesan error detail jika gagal
             $this->command->error('❌ Gagal seeding: ' . $e->getMessage());
         }
     }

@@ -64,22 +64,37 @@ return new class extends Migration
         // 7. TABEL TRANSAKSI
         Schema::create('transaksi', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained('user'); // Kasir
 
-            // Relasi Foreign Key (semua merujuk ke nama tabel baru)
-            $table->foreignId('user_id')->constrained('user')->onDelete('cascade');
+            // Kategori Pelanggan (Umum/Khusus) disimpan di Header
+            // Karena biasanya 1 struk berlaku untuk 1 jenis pelanggan
             $table->foreignId('kategori_id')->constrained('kategori');
-            $table->foreignId('brand_id')->constrained('brand');
-            $table->foreignId('produk_id')->constrained('produk');
+
             $table->foreignId('metode_pembayaran_id')->constrained('metode_pembayaran');
 
             $table->string('nama_pelanggan')->nullable();
-            $table->date('tanggal');
-            $table->decimal('harga', 15, 2);
-            $table->integer('qty');
-            $table->decimal('total', 15, 2);
-            $table->decimal('kembalian', 15, 2)->default(0);
-            $table->string('status')->default('selesai');
+            $table->dateTime('tanggal');
+            $table->decimal('total', 15, 2);    // Total Belanja
+            $table->decimal('bayar', 15, 2);    // Uang Diterima
+            $table->decimal('kembalian', 15, 2); // Kembalian
+            $table->string('status')->default('success');
+            $table->timestamps();
+        });
 
+        Schema::create('transaksi_detail', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('transaksi_id')->constrained('transaksi')->onDelete('cascade');
+
+            $table->foreignId('produk_id')->constrained('produk');
+
+            // KOLOM BRAND DIPERTAHANKAN DI SINI
+            // Tujuannya: Agar saat rekap "Berapa penjualan Brand Samsung?",
+            // kita tinggal query tabel ini tanpa join berat ke tabel produk.
+            $table->foreignId('brand_id')->constrained('brand');
+
+            $table->decimal('harga', 15, 2); // Harga Final (sesuai kategori pelanggan)
+            $table->integer('qty');
+            $table->decimal('subtotal', 15, 2); // harga * qty
             $table->timestamps();
         });
     }
@@ -90,6 +105,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('transaksi');
+        Schema::dropIfExists('transaksi_detail');
         Schema::dropIfExists('produk');
         Schema::dropIfExists('metode_pembayaran');
         Schema::dropIfExists('user');
