@@ -80,6 +80,9 @@ class TransaksiController extends Controller
             $total_belanja = 0;
             $list_barang_fix = [];
 
+            $kategoriPelanggan = Kategori::find($request->kategori_id);
+            $isKhusus = $kategoriPelanggan && stripos($kategoriPelanggan->nama_kategori, 'Khusus') !== false;
+
             foreach ($request->items as $item) {
                 $produk = Produk::lockForUpdate()->find($item['produk_id']); // Lock baris agar tidak race condition
 
@@ -89,7 +92,7 @@ class TransaksiController extends Controller
                 }
 
                 // Tentukan Harga (Bisa dikembangkan logic diskon disini berdasarkan kategori_id)
-                $harga_final = $produk->harga;
+                $harga_final = $isKhusus ? $produk->harga_khusus : $produk->harga_umum;
                 $subtotal = $harga_final * $item['qty'];
                 $total_belanja += $subtotal;
 

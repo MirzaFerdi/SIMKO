@@ -37,6 +37,7 @@ return new class extends Migration
             $table->id();
             // Perhatikan constrained merujuk ke tabel 'role'
             $table->foreignId('role_id')->constrained('role')->onDelete('cascade');
+            $table->string('nama');
             $table->string('username')->unique();
             $table->string('password');
             $table->timestamps();
@@ -56,7 +57,8 @@ return new class extends Migration
             $table->foreignId('brand_id')->constrained('brand')->onDelete('cascade');
             $table->foreignId('kategori_id')->constrained('kategori')->onDelete('cascade');
             $table->string('nama_produk');
-            $table->decimal('harga', 15, 2);
+            $table->decimal('harga_umum', 15, 2);
+            $table->decimal('harga_khusus', 15, 2);
             $table->integer('stok');
             $table->timestamps();
         });

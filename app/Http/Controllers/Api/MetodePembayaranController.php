@@ -38,6 +38,12 @@ class MetodePembayaranController extends Controller
         return response()->json(['success' => true, 'data' => $data]);
     }
 
+    public function showByKategori($kategori_id)
+    {
+        $data = MetodePembayaran::with('kategori')->where('kategori_id', $kategori_id)->get();
+        return response()->json(['success' => true, 'data' => $data]);
+    }
+
     public function update(Request $request, $id)
     {
         $data = MetodePembayaran::find($id);

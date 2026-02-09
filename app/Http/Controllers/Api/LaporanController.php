@@ -9,13 +9,14 @@ use Illuminate\Support\Facades\Validator;
 
 class LaporanController extends Controller
 {
+    // Method ini sekarang diakses via POST
     public function rekap(Request $request)
     {
-        // 1. Validasi Input
+        // 1. Validasi Input (Laravel otomatis membaca JSON Body)
         $validator = Validator::make($request->all(), [
             'start_date'  => 'required|date',
             'end_date'    => 'required|date|after_or_equal:start_date',
-            'jenis_rekap' => 'required|in:brand,produk,kategori,metode,pelanggan'
+            'jenis_rekap' => 'required|in:transaksi,brand,produk,kategori,metode,pelanggan'
         ]);
 
         if ($validator->fails()) {
@@ -28,10 +29,9 @@ class LaporanController extends Controller
 
         $data = [];
 
-        // 2. Logic Switch Case berdasarkan jenis rekap
+        // 2. Logic Switch Case (TETAP SAMA SEPERTI SEBELUMNYA)
         switch ($jenis) {
-
-            // A. REKAP PER BRAND (Ambil dari tabel Detail)
+            // A. REKAP PER BRAND
             case 'brand':
                 $data = DB::table('transaksi_detail')
                     ->join('transaksi', 'transaksi_detail.transaksi_id', '=', 'transaksi.id')
@@ -47,7 +47,7 @@ class LaporanController extends Controller
                     ->get();
                 break;
 
-            // B. REKAP PER PRODUK (Ambil dari tabel Detail)
+            // B. REKAP PER PRODUK
             case 'produk':
                 $data = DB::table('transaksi_detail')
                     ->join('transaksi', 'transaksi_detail.transaksi_id', '=', 'transaksi.id')
@@ -63,8 +63,7 @@ class LaporanController extends Controller
                     ->get();
                 break;
 
-            // C. REKAP PER KATEGORI PELANGGAN (Ambil dari Header Transaksi)
-            // Ini untuk melihat: Berapa omset dari pelanggan Umum vs Khusus
+            // C. REKAP PER KATEGORI
             case 'kategori':
                 $data = DB::table('transaksi')
                     ->join('kategori', 'transaksi.kategori_id', '=', 'kategori.id')
@@ -78,7 +77,7 @@ class LaporanController extends Controller
                     ->get();
                 break;
 
-            // D. REKAP PER METODE PEMBAYARAN (Ambil dari Header Transaksi)
+            // D. REKAP METODE
             case 'metode':
                 $data = DB::table('transaksi')
                     ->join('metode_pembayaran', 'transaksi.metode_pembayaran_id', '=', 'metode_pembayaran.id')
@@ -92,20 +91,40 @@ class LaporanController extends Controller
                     ->get();
                 break;
 
-            // E. REKAP PER NAMA PELANGGAN (Top Customer)
+            // E. REKAP PELANGGAN
             case 'pelanggan':
                 $data = DB::table('transaksi')
                     ->whereBetween('transaksi.tanggal', [$startDate, $endDate])
-                    ->whereNotNull('nama_pelanggan') // Hanya yang ada namanya
-                    ->where('nama_pelanggan', '!=', 'Umum') // Opsional: Exclude 'Umum'
+                    ->whereNotNull('nama_pelanggan')
+                    ->where('nama_pelanggan', '!=', 'Umum')
                     ->select(
                         'transaksi.nama_pelanggan',
                         DB::raw('COUNT(transaksi.id) as jumlah_transaksi'),
-                        DB::raw('SUM(transaksi.total) as total_belanja') // Total belanja dia
+                        DB::raw('SUM(transaksi.total) as total_belanja')
                     )
                     ->groupBy('transaksi.nama_pelanggan')
                     ->orderByDesc('total_belanja')
-                    ->limit(10) // Ambil Top 10 saja biar tidak berat
+                    ->limit(10)
+                    ->get();
+                break;
+
+            case 'transaksi':
+                $data = DB::table('transaksi')
+                    ->join('user', 'transaksi.user_id', '=', 'user.id') // Join ke user untuk ambil nama kasir
+                    ->join('kategori', 'transaksi.kategori_id', '=', 'kategori.id')
+                    ->join('metode_pembayaran', 'transaksi.metode_pembayaran_id', '=', 'metode_pembayaran.id')
+                    ->whereBetween('transaksi.tanggal', [$startDate, $endDate])
+                    ->select(
+                        'transaksi.id',
+                        'transaksi.tanggal',
+                        'transaksi.nama_pelanggan',
+                        'user.username as kasir', // Tampilkan siapa kasirnya
+                        'kategori.nama_kategori as kategori_pelanggan',
+                        'metode_pembayaran.nama_metode',
+                        'transaksi.total',
+                        'transaksi.status'
+                    )
+                    ->orderByDesc('transaksi.tanggal') // Urutkan dari yang terbaru
                     ->get();
                 break;
         }
@@ -114,6 +133,7 @@ class LaporanController extends Controller
             'success' => true,
             'jenis_rekap' => $jenis,
             'periode' => "$request->start_date s/d $request->end_date",
+            'grand_total' => collect($data)->sum('total') ?? collect($data)->sum('total_omset') ?? 0,
             'data' => $data
         ]);
     }

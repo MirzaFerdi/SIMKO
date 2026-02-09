@@ -55,6 +55,7 @@ class DatabaseSeeder extends Seeder
             User::create([
                 'role_id'  => $roleAdmin->id,
                 'username' => 'admin',
+                'nama'   => 'Admin',
                 'password' => Hash::make('admin123'),
             ]);
 
@@ -62,6 +63,7 @@ class DatabaseSeeder extends Seeder
             $userKasir = User::create([
                 'role_id'  => $roleKasir->id,
                 'username' => 'kasir',
+                'nama'   => 'Kasir',
                 'password' => Hash::make('kasir123'),
             ]);
 
@@ -95,7 +97,8 @@ class DatabaseSeeder extends Seeder
                 'brand_id'    => $gudangGaram->id,
                 'kategori_id' => $umum->id,
                 'nama_produk' => 'Gudang Garam International',
-                'harga'       => 28000,
+                'harga_umum'   => 28000,
+                'harga_khusus' => 27000,
                 'stok'        => 10
             ]);
 
@@ -103,16 +106,18 @@ class DatabaseSeeder extends Seeder
                 'brand_id'    => $sampoerna->id,
                 'kategori_id' => $khusus->id,
                 'nama_produk' => 'Dji Sam Soe',
-                'harga'       => 15000,
-                'stok'        => 25 // Stok awal
+                'harga_umum'   => 15000,
+                'harga_khusus' => 14000,
+                'stok'        => 25
             ]);
 
             $prod3 = Produk::create([
                 'brand_id'    => $dJarum->id,
                 'kategori_id' => $umum->id,
                 'nama_produk' => 'LA Bold',
-                'harga'       => 40000,
-                'stok'        => 16 // Stok awal
+                'harga_umum'   => 40000,
+                'harga_khusus' => 38000,
+                'stok'        => 16
             ]);
 
             $this->command->info('✅ Produk berhasil dibuat.');
@@ -123,7 +128,7 @@ class DatabaseSeeder extends Seeder
 
             // --- Transaksi 1: Kasir menjual 5 Dji Sam Soe secara Tunai ---
             $qty1 = 5;
-            $harga1 = $prod2->harga; // 15.000
+            $harga1 = $prod2->harga_khusus; // 15.000
             $subtotal1 = $harga1 * $qty1; // 75.000
 
             // Anggap user bayar 100.000 (disesuaikan agar kembalian positif)
@@ -158,7 +163,7 @@ class DatabaseSeeder extends Seeder
 
             // --- Transaksi 2: Kasir menjual 1 LA Bold via QRIS (Kemarin) ---
             $qty2 = 1;
-            $harga2 = $prod3->harga; // 40.000
+            $harga2 = $prod3->harga_umum; // 40.000
             $subtotal2 = $harga2 * $qty2;
 
             // A. Buat Header Transaksi
@@ -189,7 +194,6 @@ class DatabaseSeeder extends Seeder
 
             DB::commit();
             $this->command->info('🚀 SEMUA SEEDER BERHASIL DIJALANKAN!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             $this->command->error('❌ Gagal seeding: ' . $e->getMessage());

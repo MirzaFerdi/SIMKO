@@ -25,8 +25,13 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('role', RoleController::class);
     Route::apiResource('brand', BrandController::class);
     Route::apiResource('kategori', KategoriController::class);
+
     Route::apiResource('metode-pembayaran', MetodePembayaranController::class);
+    Route::get('metode-pembayaran/kategori/{kategori_id}', [MetodePembayaranController::class, 'showByKategori']);
+
     Route::apiResource('produk', ProdukController::class);
+    Route::get('produk/brand/{brand_id}', [ProdukController::class, 'showBrand']);
+
     Route::apiResource('transaksi', TransaksiController::class);
-    Route::get('laporan/rekap', [LaporanController::class, 'rekap']);
+    Route::post('laporan/rekap', [LaporanController::class, 'rekap']);
 });

@@ -24,7 +24,8 @@ class ProdukController extends Controller
             'brand_id'    => 'required|exists:brand,id',
             'kategori_id' => 'required|exists:kategori,id',
             'nama_produk' => 'required|string',
-            'harga'       => 'required|numeric',
+            'harga_umum'   => 'required|numeric',
+            'harga_khusus' => 'required|numeric',
             'stok'        => 'required|integer',
         ]);
 
@@ -39,6 +40,12 @@ class ProdukController extends Controller
     {
         $produk = Produk::with(['brand', 'kategori'])->find($id);
         if (!$produk) return response()->json(['success' => false, 'message' => 'Produk Tidak Ditemukan'], 404);
+        return response()->json(['success' => true, 'data' => $produk]);
+    }
+
+    public function showBrand($brand_id)
+    {
+        $produk = Produk::with(['brand', 'kategori'])->where('brand_id', $brand_id)->get();
         return response()->json(['success' => true, 'data' => $produk]);
     }
 

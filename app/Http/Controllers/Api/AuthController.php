@@ -20,6 +20,8 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
+
+            'nama'     => 'required|string|max:255',
             'username' => 'required|unique:user',
             'password' => 'required|min:6',
             'role_id'  => 'required|integer'
@@ -30,6 +32,7 @@ class AuthController extends Controller
         }
 
         $user = User::create([
+            'nama'     => $request->nama,
             'username' => $request->username,
             'password' => Hash::make($request->password),
             'role_id'  => $request->role_id
@@ -76,6 +79,7 @@ class AuthController extends Controller
     protected function respondWithToken($token)
     {
         return response()->json([
+            'success'      => true,
             'access_token' => $token,           // Token dikirim disini
             'token_type'   => 'bearer',
             'expires_in'   => auth()->factory()->getTTL() * 60,
