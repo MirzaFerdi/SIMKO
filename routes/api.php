@@ -31,7 +31,10 @@ Route::middleware('auth:api')->group(function () {
 
     Route::apiResource('produk', ProdukController::class);
     Route::get('produk/brand/{brand_id}', [ProdukController::class, 'showBrand']);
+    Route::post('produk/{id}/tambah-stok', [ProdukController::class, 'tambahStok']);
+    Route::get('produk/{id}/riwayat', [ProdukController::class, 'riwayatStok']);
 
     Route::apiResource('transaksi', TransaksiController::class);
+    Route::post('transaksi/update-status', [TransaksiController::class, 'updateStatus']);
     Route::post('laporan/rekap', [LaporanController::class, 'rekap']);
 });

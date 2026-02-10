@@ -99,6 +99,18 @@ return new class extends Migration
             $table->decimal('subtotal', 15, 2); // harga * qty
             $table->timestamps();
         });
+
+        Schema::create('riwayat_stok', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('produk_id')->constrained('produk')->onDelete('cascade');
+
+            $table->integer('stok_awal');
+            $table->integer('stok_masuk');
+            $table->integer('stok_akhir');
+
+            $table->string('keterangan')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**
@@ -114,5 +126,6 @@ return new class extends Migration
         Schema::dropIfExists('kategori');
         Schema::dropIfExists('brand');
         Schema::dropIfExists('role');
+        Schema::dropIfExists('riwayat_stok');
     }
 };

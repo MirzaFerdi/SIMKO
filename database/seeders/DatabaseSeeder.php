@@ -2,15 +2,15 @@
 
 namespace Database\Seeders;
 
-// Pastikan import model ini sesuai dengan lokasi model Anda
 use App\Models\Brand;
 use App\Models\Kategori;
 use App\Models\MetodePembayaran;
 use App\Models\Produk;
 use App\Models\Role;
 use App\Models\Transaksi;
-use App\Models\TransaksiDetail; // Tambahkan Model Ini
+use App\Models\TransaksiDetail;
 use App\Models\User;
+use App\Models\RiwayatStok;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +22,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Menggunakan Transaction agar jika ada error di tengah, semua data dibatalkan (bersih)
         DB::beginTransaction();
 
         try {
@@ -30,17 +29,14 @@ class DatabaseSeeder extends Seeder
             // 1. DATA MASTER UTAMA (Role, Kategori, Brand)
             // ------------------------------------------------------------------
 
-            // Buat Role
             $roleAdmin = Role::create(['nama_role' => 'admin']);
             $roleKasir = Role::create(['nama_role' => 'Kasir']);
 
             $this->command->info('✅ Role berhasil dibuat.');
 
-            // Buat Kategori
             $umum   = Kategori::create(['nama_kategori' => 'Umum']);
             $khusus = Kategori::create(['nama_kategori' => 'Khusus']);
 
-            // Buat Brand
             $sampoerna   = Brand::create(['nama_brand' => 'Sampoerna']);
             $gudangGaram = Brand::create(['nama_brand' => 'Gudang Garam']);
             $dJarum      = Brand::create(['nama_brand' => 'Djarum']);
@@ -51,19 +47,17 @@ class DatabaseSeeder extends Seeder
             // 2. DATA USER (Login)
             // ------------------------------------------------------------------
 
-            // Admin (Username: admin, Pass: admin123)
             User::create([
                 'role_id'  => $roleAdmin->id,
                 'username' => 'admin',
-                'nama'   => 'Admin',
+                'nama'     => 'Admin System',
                 'password' => Hash::make('admin123'),
             ]);
 
-            // Kasir (Username: kasir, Pass: kasir123)
             $userKasir = User::create([
                 'role_id'  => $roleKasir->id,
                 'username' => 'kasir',
-                'nama'   => 'Kasir',
+                'nama'     => 'Kasir Utama',
                 'password' => Hash::make('kasir123'),
             ]);
 
@@ -73,7 +67,6 @@ class DatabaseSeeder extends Seeder
             // 3. DATA PENDUKUNG (Metode Pembayaran)
             // ------------------------------------------------------------------
 
-            // Kita hubungkan ke kategori 'Umum' (sebagai contoh kategori keuangan)
             $umumCash = MetodePembayaran::create([
                 'kategori_id' => $umum->id,
                 'nama_metode' => 'Tunai / Cash'
@@ -90,54 +83,85 @@ class DatabaseSeeder extends Seeder
             ]);
 
             // ------------------------------------------------------------------
-            // 4. DATA PRODUK
+            // 4. DATA PRODUK & RIWAYAT STOK AWAL
             // ------------------------------------------------------------------
 
+            // --- PRODUK 1 ---
             $prod1 = Produk::create([
-                'brand_id'    => $gudangGaram->id,
-                'kategori_id' => $umum->id,
-                'nama_produk' => 'Gudang Garam International',
+                'brand_id'     => $gudangGaram->id,
+                'kategori_id'  => $umum->id,
+                'nama_produk'  => 'Gudang Garam International',
                 'harga_umum'   => 28000,
                 'harga_khusus' => 27000,
-                'stok'        => 10
+                'stok'         => 10
             ]);
 
+            // Catat Riwayat Stok Awal
+            RiwayatStok::create([
+                'produk_id'  => $prod1->id,
+                'stok_awal'  => 0,
+                'stok_masuk' => 10,
+                'stok_akhir' => 10,
+                'keterangan' => 'Stok Awal System',
+                'created_at' => now()->subDays(2) // Seolah-olah stok masuk 2 hari lalu
+            ]);
+
+
+            // --- PRODUK 2 ---
             $prod2 = Produk::create([
-                'brand_id'    => $sampoerna->id,
-                'kategori_id' => $khusus->id,
-                'nama_produk' => 'Dji Sam Soe',
+                'brand_id'     => $sampoerna->id,
+                'kategori_id'  => $khusus->id,
+                'nama_produk'  => 'Dji Sam Soe',
                 'harga_umum'   => 15000,
                 'harga_khusus' => 14000,
-                'stok'        => 25
+                'stok'         => 25
             ]);
 
+            RiwayatStok::create([
+                'produk_id'  => $prod2->id,
+                'stok_awal'  => 0,
+                'stok_masuk' => 25,
+                'stok_akhir' => 25,
+                'keterangan' => 'Stok Awal System',
+                'created_at' => now()->subDays(2)
+            ]);
+
+
+            // --- PRODUK 3 ---
             $prod3 = Produk::create([
-                'brand_id'    => $dJarum->id,
-                'kategori_id' => $umum->id,
-                'nama_produk' => 'LA Bold',
+                'brand_id'     => $dJarum->id,
+                'kategori_id'  => $umum->id,
+                'nama_produk'  => 'LA Bold',
                 'harga_umum'   => 40000,
                 'harga_khusus' => 38000,
-                'stok'        => 16
+                'stok'         => 16
             ]);
 
-            $this->command->info('✅ Produk berhasil dibuat.');
+            RiwayatStok::create([
+                'produk_id'  => $prod3->id,
+                'stok_awal'  => 0,
+                'stok_masuk' => 16,
+                'stok_akhir' => 16,
+                'keterangan' => 'Stok Awal System',
+                'created_at' => now()->subDays(2)
+            ]);
+
+            $this->command->info('✅ Produk & Riwayat Stok berhasil dibuat.');
 
             // ------------------------------------------------------------------
-            // 5. DATA TRANSAKSI (Simulasi Penjualan Header & Detail)
+            // 5. DATA TRANSAKSI (Simulasi)
             // ------------------------------------------------------------------
 
-            // --- Transaksi 1: Kasir menjual 5 Dji Sam Soe secara Tunai ---
+            // --- Transaksi 1: Kasir menjual 5 Dji Sam Soe ---
             $qty1 = 5;
-            $harga1 = $prod2->harga_khusus; // 15.000
-            $subtotal1 = $harga1 * $qty1; // 75.000
-
-            // Anggap user bayar 100.000 (disesuaikan agar kembalian positif)
+            $harga1 = $prod2->harga_khusus; // Ambil harga khusus
+            $subtotal1 = $harga1 * $qty1;
             $uangBayar1 = 100000;
 
-            // A. Buat Header Transaksi
+            // A. Header
             $transaksi1 = Transaksi::create([
                 'user_id'              => $userKasir->id,
-                'kategori_id'          => $prod2->kategori_id, // Mengambil kategori pelanggan dari produk (Khusus)
+                'kategori_id'          => $prod2->kategori_id,
                 'metode_pembayaran_id' => $umumCash->id,
                 'nama_pelanggan'       => 'Budi Santoso',
                 'tanggal'              => now(),
@@ -147,39 +171,39 @@ class DatabaseSeeder extends Seeder
                 'status'               => 'success'
             ]);
 
-            // B. Buat Detail Transaksi
+            // B. Detail
             TransaksiDetail::create([
                 'transaksi_id' => $transaksi1->id,
                 'produk_id'    => $prod2->id,
-                'brand_id'     => $prod2->brand_id, // PENTING: Brand disimpan di detail untuk rekap
+                'brand_id'     => $prod2->brand_id,
                 'harga'        => $harga1,
                 'qty'          => $qty1,
                 'subtotal'     => $subtotal1
             ]);
 
-            // C. Kurangi Stok
+            // C. Kurangi Stok Master (Simulasi barang keluar)
             $prod2->decrement('stok', $qty1);
 
 
-            // --- Transaksi 2: Kasir menjual 1 LA Bold via QRIS (Kemarin) ---
+            // --- Transaksi 2: Kasir menjual 1 LA Bold (Kemarin) ---
             $qty2 = 1;
-            $harga2 = $prod3->harga_umum; // 40.000
+            $harga2 = $prod3->harga_umum; // Ambil harga umum
             $subtotal2 = $harga2 * $qty2;
 
-            // A. Buat Header Transaksi
+            // A. Header
             $transaksi2 = Transaksi::create([
                 'user_id'              => $userKasir->id,
-                'kategori_id'          => $prod3->kategori_id, // Kategori Umum
+                'kategori_id'          => $prod3->kategori_id,
                 'metode_pembayaran_id' => $umumQris->id,
                 'nama_pelanggan'       => 'Siti Aminah',
                 'tanggal'              => now()->subDay(),
                 'total'                => $subtotal2,
-                'bayar'                => $subtotal2, // Uang pas QRIS
+                'bayar'                => $subtotal2,
                 'kembalian'            => 0,
                 'status'               => 'success'
             ]);
 
-            // B. Buat Detail Transaksi
+            // B. Detail
             TransaksiDetail::create([
                 'transaksi_id' => $transaksi2->id,
                 'produk_id'    => $prod3->id,
@@ -189,11 +213,12 @@ class DatabaseSeeder extends Seeder
                 'subtotal'     => $subtotal2
             ]);
 
-            // C. Kurangi Stok
+            // C. Kurangi Stok Master
             $prod3->decrement('stok', $qty2);
 
             DB::commit();
             $this->command->info('🚀 SEMUA SEEDER BERHASIL DIJALANKAN!');
+
         } catch (\Exception $e) {
             DB::rollBack();
             $this->command->error('❌ Gagal seeding: ' . $e->getMessage());

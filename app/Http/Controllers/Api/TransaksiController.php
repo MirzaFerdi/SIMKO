@@ -156,6 +156,29 @@ class TransaksiController extends Controller
         }
     }
 
+    public function updateStatus()
+    {
+        try {
+            $affectedRows = Transaksi::where('status', 'pending')->update([
+                'status'    => 'success',
+
+                'bayar'     => DB::raw('total'),
+
+                'kembalian' => 0
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Berhasil melunasi $affectedRows transaksi pending.",
+                'data'    => [
+                    'jumlah_terupdate' => $affectedRows
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+
 
     // public function store(Request $request)
     // {

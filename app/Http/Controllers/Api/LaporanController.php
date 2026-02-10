@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Transaksi;
 use Illuminate\Support\Facades\Validator;
 
 class LaporanController extends Controller
@@ -109,23 +110,38 @@ class LaporanController extends Controller
                 break;
 
             case 'transaksi':
-                $data = DB::table('transaksi')
-                    ->join('user', 'transaksi.user_id', '=', 'user.id') // Join ke user untuk ambil nama kasir
-                    ->join('kategori', 'transaksi.kategori_id', '=', 'kategori.id')
-                    ->join('metode_pembayaran', 'transaksi.metode_pembayaran_id', '=', 'metode_pembayaran.id')
-                    ->whereBetween('transaksi.tanggal', [$startDate, $endDate])
-                    ->select(
-                        'transaksi.id',
-                        'transaksi.tanggal',
-                        'transaksi.nama_pelanggan',
-                        'user.username as kasir', // Tampilkan siapa kasirnya
-                        'kategori.nama_kategori as kategori_pelanggan',
-                        'metode_pembayaran.nama_metode',
-                        'transaksi.total',
-                        'transaksi.status'
-                    )
-                    ->orderByDesc('transaksi.tanggal') // Urutkan dari yang terbaru
-                    ->get();
+                $data = Transaksi::with([
+                    'user',
+                    'kategori',
+                    'metodePembayaran',
+                    'detail.produk',
+                    'detail.brand'
+                ])
+                    ->whereBetween('tanggal', [$startDate, $endDate])
+                    ->orderByDesc('tanggal')
+                    ->get()
+                    ->map(function ($transaksi) {
+                        return [
+                            'id'                 => $transaksi->id,
+                            'tanggal'            => $transaksi->tanggal,
+                            'nama_pelanggan'     => $transaksi->nama_pelanggan,
+                            'kasir'              => $transaksi->user->username,
+                            'kategori_pelanggan' => $transaksi->kategori->nama_kategori,
+                            'nama_metode'        => $transaksi->metodePembayaran->nama_metode,
+                            'total'              => $transaksi->total,
+                            'status'             => $transaksi->status,
+
+                            'items'              => $transaksi->detail->map(function ($item) {
+                                return [
+                                    'nama_produk' => $item->produk->nama_produk,
+                                    'nama_brand'  => $item->brand->nama_brand,
+                                    'qty'         => $item->qty,
+                                    'harga'       => $item->harga,
+                                    'subtotal'    => $item->subtotal
+                                ];
+                            })
+                        ];
+                    });
                 break;
         }
 

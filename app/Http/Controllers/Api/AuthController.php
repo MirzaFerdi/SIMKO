@@ -59,7 +59,13 @@ class AuthController extends Controller
     // ME
     public function me()
     {
-        return response()->json(auth()->user());
+        $user = auth()->user();
+        
+        if (!$user) {
+            return response()->json(['message' => 'Anda sudah logout'], 401);
+        }
+        
+        return response()->json($user);
     }
 
     // LOGOUT (Hapus Token di Server)
