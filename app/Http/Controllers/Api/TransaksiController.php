@@ -179,6 +179,48 @@ class TransaksiController extends Controller
         }
     }
 
+    public function getProdukTerlaris()
+    {
+        $produkTerlaris = TransaksiDetail::select('produk_id', DB::raw('SUM(qty) as total_terjual'))
+            ->groupBy('produk_id')
+            ->orderByDesc('total_terjual')
+            ->with('produk:id,nama_produk')
+            ->with('produk:id,nama_produk,brand_id', 'produk.brand:id,nama_brand')
+            ->limit(3)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $produkTerlaris
+        ]);
+    }
+
+    public function getProdukTerjualPerBulanByKategori($kategori_id)
+    {
+        $produkTerlaris = TransaksiDetail::select(
+                DB::raw('SUM(qty) as total_terjual'),
+                DB::raw('MONTH(transaksi.tanggal) as bulan'),
+                DB::raw('YEAR(transaksi.tanggal) as tahun')
+            )
+            ->join('transaksi', 'transaksi_detail.transaksi_id', '=', 'transaksi.id')
+            ->where('transaksi.kategori_id', $kategori_id)
+            ->groupBy('bulan', 'tahun')
+            ->orderByDesc('tahun')
+            ->orderByDesc('bulan')
+            ->get()
+            ->map(fn ($item) => [
+                'bulan' => $item->bulan,
+                'tahun' => $item->tahun,
+                'total_terjual' => $item->total_terjual
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'kategori_id' => $kategori_id,
+            'data' => $produkTerlaris
+        ]);
+    }
+
 
     // public function store(Request $request)
     // {

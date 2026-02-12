@@ -109,6 +109,11 @@ class ProdukController extends Controller
         return response()->json(['success' => true, 'data' => $produk]);
     }
 
+    public function showLowStock(){
+        $produk = Produk::with(['brand', 'kategori'])->orderBy('stok', 'asc')->limit(3)->get();
+        return response()->json(['success' => true, 'data' => $produk]);
+    }
+
     public function showBrand($brand_id)
     {
         $produk = Produk::with(['brand', 'kategori'])->where('brand_id', $brand_id)->get();

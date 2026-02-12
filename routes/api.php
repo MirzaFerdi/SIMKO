@@ -26,15 +26,18 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('brand', BrandController::class);
     Route::apiResource('kategori', KategoriController::class);
 
-    Route::apiResource('metode-pembayaran', MetodePembayaranController::class);
     Route::get('metode-pembayaran/kategori/{kategori_id}', [MetodePembayaranController::class, 'showByKategori']);
+    Route::apiResource('metode-pembayaran', MetodePembayaranController::class);
 
-    Route::apiResource('produk', ProdukController::class);
     Route::get('produk/brand/{brand_id}', [ProdukController::class, 'showBrand']);
+    Route::get('produk/lowstock', [ProdukController::class, 'showLowStock']);
     Route::post('produk/{id}/tambah-stok', [ProdukController::class, 'tambahStok']);
     Route::get('produk/{id}/riwayat', [ProdukController::class, 'riwayatStok']);
+    Route::apiResource('produk', ProdukController::class);
 
-    Route::apiResource('transaksi', TransaksiController::class);
+    Route::get('transaksi/produkterlaris', [TransaksiController::class, 'getProdukTerlaris']);
+    Route::get('transaksi/produkterjual/{kategori_id}', [TransaksiController::class, 'getProdukTerjualPerBulanByKategori']);
     Route::post('transaksi/update-status', [TransaksiController::class, 'updateStatus']);
     Route::post('laporan/rekap', [LaporanController::class, 'rekap']);
+    Route::apiResource('transaksi', TransaksiController::class);
 });
