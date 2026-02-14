@@ -16,6 +16,14 @@ class ProdukController extends Controller
         // Load relasi brand dan kategori
         return response()->json([
             'success' => true,
+            'data'    => Produk::with(['brand', 'kategori'])->orderBy('id')->get()
+        ]);
+    }
+
+    public function showPaginate()
+    {
+        return response()->json([
+            'success' => true,
             'data'    => Produk::with(['brand', 'kategori'])->orderBy('id')->paginate(6)
         ]);
     }

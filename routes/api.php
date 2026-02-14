@@ -31,11 +31,13 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('produk/brand/{brand_id}', [ProdukController::class, 'showBrand']);
     Route::get('produk/search/{keyword}', [ProdukController::class, 'search']);
+    Route::get('produk/paginate', [ProdukController::class, 'showPaginate']);
     Route::get('produk/lowstock', [ProdukController::class, 'showLowStock']);
     Route::post('produk/{id}/tambah-stok', [ProdukController::class, 'tambahStok']);
     Route::get('produk/{id}/riwayat', [ProdukController::class, 'riwayatStok']);
     Route::apiResource('produk', ProdukController::class);
 
+    Route::get('transaksi/paginate', [TransaksiController::class, 'showPaginate']);
     Route::get('transaksi/produkterlaris', [TransaksiController::class, 'getProdukTerlaris']);
     Route::get('transaksi/produkterjual/{kategori_id}', [TransaksiController::class, 'getProdukTerjualPerBulanByKategori']);
     Route::post('transaksi/update-status', [TransaksiController::class, 'updateStatus']);
