@@ -20,7 +20,7 @@ class TransaksiController extends Controller
         // Menampilkan semua data transaksi beserta relasinya
         $data = Transaksi::with(['user', 'detail.produk', 'detail.brand', 'kategori', 'metodePembayaran'])
             ->orderBy('id')
-            ->get();
+            ->paginate(6);
 
         return response()->json(['success' => true, 'data' => $data]);
     }

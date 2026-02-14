@@ -16,8 +16,23 @@ class ProdukController extends Controller
         // Load relasi brand dan kategori
         return response()->json([
             'success' => true,
-            'data'    => Produk::with(['brand', 'kategori'])->orderBy('id')->get()
+            'data'    => Produk::with(['brand', 'kategori'])->orderBy('id')->paginate(6)
         ]);
+    }
+
+    public function search($keyword){
+        $produk = Produk::with(['brand', 'kategori'])
+            ->where('nama_produk', 'like', "%$keyword%")
+            ->orWhereHas('brand', function($query) use ($keyword) {
+                $query->where('nama_brand', 'like', "%$keyword%");
+            })
+            ->orWhereHas('kategori', function($query) use ($keyword) {
+                $query->where('nama_kategori', 'like', "%$keyword%");
+            })
+            ->orderBy('id')
+            ->paginate(6);
+
+        return response()->json(['success' => true, 'data' => $produk]);
     }
 
     public function store(Request $request)

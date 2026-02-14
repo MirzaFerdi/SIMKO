@@ -30,6 +30,7 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('metode-pembayaran', MetodePembayaranController::class);
 
     Route::get('produk/brand/{brand_id}', [ProdukController::class, 'showBrand']);
+    Route::get('produk/search/{keyword}', [ProdukController::class, 'search']);
     Route::get('produk/lowstock', [ProdukController::class, 'showLowStock']);
     Route::post('produk/{id}/tambah-stok', [ProdukController::class, 'tambahStok']);
     Route::get('produk/{id}/riwayat', [ProdukController::class, 'riwayatStok']);
