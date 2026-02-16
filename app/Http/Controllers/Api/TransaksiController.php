@@ -25,7 +25,8 @@ class TransaksiController extends Controller
         return response()->json(['success' => true, 'data' => $data]);
     }
 
-    public function showPaginate(){
+    public function showPaginate()
+    {
         $data = Transaksi::with(['user', 'detail.produk', 'detail.brand', 'kategori', 'metodePembayaran'])
             ->orderBy('id')
             ->paginate(6);
@@ -206,17 +207,17 @@ class TransaksiController extends Controller
     public function getProdukTerjualPerBulanByKategori($kategori_id)
     {
         $produkTerlaris = TransaksiDetail::select(
-                DB::raw('SUM(qty) as total_terjual'),
-                DB::raw('MONTH(transaksi.tanggal) as bulan'),
-                DB::raw('YEAR(transaksi.tanggal) as tahun')
-            )
+            DB::raw('SUM(qty) as total_terjual'),
+            DB::raw('MONTH(transaksi.tanggal) as bulan'),
+            DB::raw('YEAR(transaksi.tanggal) as tahun')
+        )
             ->join('transaksi', 'transaksi_detail.transaksi_id', '=', 'transaksi.id')
             ->where('transaksi.kategori_id', $kategori_id)
             ->groupBy('bulan', 'tahun')
             ->orderByDesc('tahun')
             ->orderByDesc('bulan')
             ->get()
-            ->map(fn ($item) => [
+            ->map(fn($item) => [
                 'bulan' => $item->bulan,
                 'tahun' => $item->tahun,
                 'total_terjual' => $item->total_terjual
@@ -226,6 +227,20 @@ class TransaksiController extends Controller
             'success' => true,
             'kategori_id' => $kategori_id,
             'data' => $produkTerlaris
+        ]);
+    }
+
+    public function pending()
+    {
+        $data = Transaksi::with(['user', 'detail.produk', 'detail.brand', 'kategori', 'metodePembayaran'])
+            ->where('status', 'pending') // <--- Filter Kuncinya Disini
+            ->orderByDesc('tanggal')     // Urutkan dari yang terbaru
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar Transaksi BON (Pending)',
+            'data'    => $data
         ]);
     }
 

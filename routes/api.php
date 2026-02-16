@@ -37,6 +37,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('produk/{id}/riwayat', [ProdukController::class, 'riwayatStok']);
     Route::apiResource('produk', ProdukController::class);
 
+    Route::get('transaksi/pending', [TransaksiController::class, 'pending']);
     Route::get('transaksi/paginate', [TransaksiController::class, 'showPaginate']);
     Route::get('transaksi/produkterlaris', [TransaksiController::class, 'getProdukTerlaris']);
     Route::get('transaksi/produkterjual/{kategori_id}', [TransaksiController::class, 'getProdukTerjualPerBulanByKategori']);
