@@ -47,7 +47,6 @@ class ProdukController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'brand_id'    => 'required|exists:brand,id',
-            'kategori_id' => 'required|exists:kategori,id',
             'nama_produk' => 'required|string',
             'harga_umum'   => 'required|numeric',
             'harga_khusus' => 'required|numeric',

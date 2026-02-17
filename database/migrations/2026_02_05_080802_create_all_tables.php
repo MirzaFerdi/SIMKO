@@ -55,7 +55,6 @@ return new class extends Migration
         Schema::create('produk', function (Blueprint $table) {
             $table->id();
             $table->foreignId('brand_id')->constrained('brand')->onDelete('cascade');
-            $table->foreignId('kategori_id')->constrained('kategori')->onDelete('cascade');
             $table->string('nama_produk');
             $table->decimal('harga_umum', 15, 2);
             $table->decimal('harga_khusus', 15, 2);

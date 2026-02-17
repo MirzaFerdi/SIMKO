@@ -89,7 +89,6 @@ class DatabaseSeeder extends Seeder
             // --- PRODUK 1 ---
             $prod1 = Produk::create([
                 'brand_id'     => $gudangGaram->id,
-                'kategori_id'  => $umum->id,
                 'nama_produk'  => 'Gudang Garam International',
                 'harga_umum'   => 28000,
                 'harga_khusus' => 27000,
@@ -110,7 +109,6 @@ class DatabaseSeeder extends Seeder
             // --- PRODUK 2 ---
             $prod2 = Produk::create([
                 'brand_id'     => $sampoerna->id,
-                'kategori_id'  => $khusus->id,
                 'nama_produk'  => 'Dji Sam Soe',
                 'harga_umum'   => 15000,
                 'harga_khusus' => 14000,
@@ -130,7 +128,6 @@ class DatabaseSeeder extends Seeder
             // --- PRODUK 3 ---
             $prod3 = Produk::create([
                 'brand_id'     => $dJarum->id,
-                'kategori_id'  => $umum->id,
                 'nama_produk'  => 'LA Bold',
                 'harga_umum'   => 40000,
                 'harga_khusus' => 38000,
@@ -161,7 +158,7 @@ class DatabaseSeeder extends Seeder
             // A. Header
             $transaksi1 = Transaksi::create([
                 'user_id'              => $userKasir->id,
-                'kategori_id'          => $prod2->kategori_id,
+                'kategori_id'          => 2,
                 'metode_pembayaran_id' => $umumCash->id,
                 'nama_pelanggan'       => 'Budi Santoso',
                 'tanggal'              => now(),
@@ -193,7 +190,7 @@ class DatabaseSeeder extends Seeder
             // A. Header
             $transaksi2 = Transaksi::create([
                 'user_id'              => $userKasir->id,
-                'kategori_id'          => $prod3->kategori_id,
+                'kategori_id'          => 1,
                 'metode_pembayaran_id' => $umumQris->id,
                 'nama_pelanggan'       => 'Siti Aminah',
                 'tanggal'              => now()->subDay(),
