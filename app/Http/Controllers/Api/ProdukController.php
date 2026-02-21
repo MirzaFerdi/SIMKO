@@ -28,13 +28,14 @@ class ProdukController extends Controller
         ]);
     }
 
-    public function search($keyword){
+    public function search($keyword)
+    {
         $produk = Produk::with(['brand', 'kategori'])
             ->where('nama_produk', 'like', "%$keyword%")
-            ->orWhereHas('brand', function($query) use ($keyword) {
+            ->orWhereHas('brand', function ($query) use ($keyword) {
                 $query->where('nama_brand', 'like', "%$keyword%");
             })
-            ->orWhereHas('kategori', function($query) use ($keyword) {
+            ->orWhereHas('kategori', function ($query) use ($keyword) {
                 $query->where('nama_kategori', 'like', "%$keyword%");
             })
             ->orderBy('id')
@@ -47,13 +48,19 @@ class ProdukController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'brand_id'    => 'required|exists:brand,id',
-            'nama_produk' => 'required|string',
+            'nama_produk' => 'required|string|unique:produk,nama_produk',
             'harga_umum'   => 'required|numeric',
             'harga_khusus' => 'required|numeric',
             'stok'        => 'required|integer',
         ]);
 
-        if ($validator->fails()) return response()->json($validator->errors(), 422);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Produk Dengan Nama Tersebut Sudah Ada',
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         $produk = Produk::create($request->all());
 
@@ -124,15 +131,38 @@ class ProdukController extends Controller
         ]);
     }
 
-    public function showAllRiwayatStok()
+    public function showAllRiwayatStok(Request $request)
     {
-        $riwayat = RiwayatStok::with('produk:id,nama_produk')
-            ->orderByDesc('created_at')
-            ->get();
+        $query = RiwayatStok::with('produk:id,nama_produk,brand_id');
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $startDate = $request->start_date . ' 00:00:00';
+            $endDate   = $request->end_date . ' 23:59:59';
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        if ($request->filled('produk_id')) {
+            $query->where('produk_id', $request->produk_id);
+        }
+
+        if ($request->filled('brand_id')) {
+            $query->whereHas('produk', function ($q) use ($request) {
+                $q->where('brand_id', $request->brand_id);
+            });
+        }
+
+        $riwayat = $query->orderByDesc('created_at')->get();
+
+        if ($riwayat->isEmpty()) {
+            return response()->json([
+            'success' => false,
+            'message' => 'Data Tidak Ditemukan'
+            ], 404);
+        }
 
         return response()->json([
             'success' => true,
-            'data' => $riwayat
+            'data'    => $riwayat
         ]);
     }
 
@@ -143,7 +173,8 @@ class ProdukController extends Controller
         return response()->json(['success' => true, 'data' => $produk]);
     }
 
-    public function showLowStock(){
+    public function showLowStock()
+    {
         $produk = Produk::with(['brand', 'kategori'])->orderBy('stok', 'asc')->limit(3)->get();
         return response()->json(['success' => true, 'data' => $produk]);
     }

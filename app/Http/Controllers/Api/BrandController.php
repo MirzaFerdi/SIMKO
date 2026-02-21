@@ -23,7 +23,11 @@ class BrandController extends Controller
             'nama_brand' => 'required|string|unique:brand,nama_brand'
         ]);
 
-        if ($validator->fails()) return response()->json($validator->errors(), 422);
+        if ($validator->fails()) return response()->json([
+            'success' => false,
+            'message' => 'Brand Dengan Nama Tersebut Sudah Ada',
+            'errors' => $validator->errors()
+        ], 422);
 
         $brand = Brand::create($request->all());
 

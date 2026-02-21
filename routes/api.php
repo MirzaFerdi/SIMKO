@@ -32,7 +32,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('produk/brand/{brand_id}', [ProdukController::class, 'showBrand']);
     Route::get('produk/search/{keyword}', [ProdukController::class, 'search']);
     Route::get('produk/paginate', [ProdukController::class, 'showPaginate']);
-    Route::get('produk/stockall', [ProdukController::class, 'showAllRiwayatStok']);
+    Route::post('produk/stockall', [ProdukController::class, 'showAllRiwayatStok']);
     Route::get('produk/lowstock', [ProdukController::class, 'showLowStock']);
     Route::post('produk/{id}/tambah-stok', [ProdukController::class, 'tambahStok']);
     Route::get('produk/{id}/riwayat', [ProdukController::class, 'riwayatStok']);
