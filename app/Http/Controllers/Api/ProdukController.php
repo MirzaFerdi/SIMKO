@@ -124,6 +124,18 @@ class ProdukController extends Controller
         ]);
     }
 
+    public function showAllRiwayatStok()
+    {
+        $riwayat = RiwayatStok::with('produk:id,nama_produk')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $riwayat
+        ]);
+    }
+
     public function show($id)
     {
         $produk = Produk::with(['brand', 'kategori'])->find($id);
