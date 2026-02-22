@@ -17,6 +17,23 @@ class BrandController extends Controller
         ]);
     }
 
+    public function showPaginate()
+    {
+        return response()->json([
+            'success' => true,
+            'data'   => Brand::orderBy('id')->paginate(6)
+        ]);
+    }
+
+    public function search($keyword)
+    {
+        $brand = Brand::where('nama_brand', 'like', "%$keyword%")
+            ->orderBy('id')
+            ->paginate(6);
+
+        return response()->json(['success' => true, 'data' => $brand]);
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
