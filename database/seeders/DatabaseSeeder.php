@@ -31,15 +31,16 @@ class DatabaseSeeder extends Seeder
 
             $roleAdmin = Role::create(['nama_role' => 'admin']);
             $roleKasir = Role::create(['nama_role' => 'Kasir']);
-
             $this->command->info('✅ Role berhasil dibuat.');
 
             $umum   = Kategori::create(['nama_kategori' => 'Umum']);
-            $khusus = Kategori::create(['nama_kategori' => 'Khusus']);
+            $khusus = Kategori::create(['nama_kategori' => 'Khusus (Karyawan)']);
 
-            $sampoerna   = Brand::create(['nama_brand' => 'Sampoerna']);
+            // Buat Brand sesuai Gambar
+            $djarum      = Brand::create(['nama_brand' => 'Djarum']);
             $gudangGaram = Brand::create(['nama_brand' => 'Gudang Garam']);
-            $dJarum      = Brand::create(['nama_brand' => 'Djarum']);
+            $sampoerna   = Brand::create(['nama_brand' => 'Sampoerna']);
+            $additional  = Brand::create(['nama_brand' => 'Additional Cigarettes']);
 
             $this->command->info('✅ Data Master (Kategori & Brand) berhasil dibuat.');
 
@@ -67,100 +68,127 @@ class DatabaseSeeder extends Seeder
             // 3. DATA PENDUKUNG (Metode Pembayaran)
             // ------------------------------------------------------------------
 
-            $umumCash = MetodePembayaran::create([
-                'kategori_id' => $umum->id,
-                'nama_metode' => 'Tunai / Cash'
-            ]);
-
-            $umumQris = MetodePembayaran::create([
-                'kategori_id' => $umum->id,
-                'nama_metode' => 'QRIS'
-            ]);
-
-            $khususBon = MetodePembayaran::create([
-                'kategori_id' => $khusus->id,
-                'nama_metode' => 'BON'
-            ]);
+            $umumCash = MetodePembayaran::create(['kategori_id' => $umum->id, 'nama_metode' => 'Tunai / Cash']);
+            $umumQris = MetodePembayaran::create(['kategori_id' => $umum->id, 'nama_metode' => 'QRIS']);
+            $khususBon = MetodePembayaran::create(['kategori_id' => $khusus->id, 'nama_metode' => 'BON']);
 
             // ------------------------------------------------------------------
-            // 4. DATA PRODUK & RIWAYAT STOK AWAL
+            // 4. DATA PRODUK & RIWAYAT STOK (Sistem Looping dari Array)
             // ------------------------------------------------------------------
+            $stokAwalDefault = 50; // Set default stok semua rokok 50 bungkus
 
-            // --- PRODUK 1 ---
-            $prod1 = Produk::create([
-                'brand_id'     => $gudangGaram->id,
-                'nama_produk'  => 'Gudang Garam International',
-                'harga_umum'   => 28000,
-                'harga_khusus' => 27000,
-                'stok'         => 10
-            ]);
+            // A. LIST HARGA DJARUM
+            $listDjarum = [
+                ['nama' => 'LA LIGHTS 16', 'umum' => 40000, 'karyawan' => 36000],
+                ['nama' => 'D. SUPER MLD FRESH COL', 'umum' => 35000, 'karyawan' => 33000],
+                ['nama' => 'D. SUPER MILD 20', 'umum' => 45000, 'karyawan' => 41000],
+                ['nama' => 'LA BOLD 16', 'umum' => 35000, 'karyawan' => 33000],
+                ['nama' => 'LA BOLD 20', 'umum' => 45000, 'karyawan' => 41000],
+                ['nama' => 'LA ICE 16', 'umum' => 40000, 'karyawan' => 36000],
+                ['nama' => 'LA ICE PURPLE BOOST 16', 'umum' => 40000, 'karyawan' => 36000],
+                ['nama' => 'LA ICE MANGO BOOST 16', 'umum' => 40000, 'karyawan' => 36000],
+                ['nama' => 'D. SUPER 12', 'umum' => 30000, 'karyawan' => 25000],
+                ['nama' => 'D. 76 12', 'umum' => 20000, 'karyawan' => 18000],
+                ['nama' => 'D. 76 ROYAL 12', 'umum' => 20000, 'karyawan' => 18000],
+                ['nama' => 'D. 76 APEL 12', 'umum' => 20000, 'karyawan' => 17000],
+                ['nama' => 'D. MANGGA ROYAL 12', 'umum' => 20000, 'karyawan' => 18000],
+                ['nama' => 'D. SUPER ESPRESSO GOLD', 'umum' => 20000, 'karyawan' => 21000],
+                ['nama' => 'D. SUPER KRETEK WRAPS', 'umum' => 20000, 'karyawan' => 20000],
+                ['nama' => 'DJARUM D WRAPS 12', 'umum' => 20000, 'karyawan' => 17000],
+                ['nama' => 'RAPTOR 12', 'umum' => 20000, 'karyawan' => 18000],
+                ['nama' => 'GEO MILD 16', 'umum' => 30000, 'karyawan' => 26000],
+                ['nama' => 'FERRO 16', 'umum' => 25000, 'karyawan' => 23000],
+                ['nama' => 'GEO KRETEK 12', 'umum' => 15000, 'karyawan' => 13000],
+                ['nama' => 'FILASTA KRETEK 16', 'umum' => 15000, 'karyawan' => 12000],
+            ];
 
-            // Catat Riwayat Stok Awal
-            RiwayatStok::create([
-                'produk_id'  => $prod1->id,
-                'stok_awal'  => 0,
-                'stok_masuk' => 10,
-                'stok_akhir' => 10,
-                'keterangan' => 'Stok Awal System',
-                'created_at' => now()->subDays(2) // Seolah-olah stok masuk 2 hari lalu
-            ]);
+            // B. LIST HARGA GUDANG GARAM
+            $listGudangGaram = [
+                ['nama' => 'SURYA 12', 'umum' => 30000, 'karyawan' => 28000],
+                ['nama' => 'GG SIGNATURE COKLAT', 'umum' => 30000, 'karyawan' => 28000],
+                ['nama' => 'SURYA PRO MERAH', 'umum' => 38000, 'karyawan' => 35000],
+                ['nama' => '16 SURYA PRO MILD', 'umum' => 38000, 'karyawan' => 35000],
+                ['nama' => 'GG SIGNATURE BIRU 12', 'umum' => 30000, 'karyawan' => 25000],
+                ['nama' => 'GG MILD 16', 'umum' => 38000, 'karyawan' => 35000],
+                ['nama' => 'GG MILD SHIVER 16', 'umum' => 38000, 'karyawan' => 35000],
+            ];
 
+            // C. LIST HARGA SAMPOERNA
+            $listSampoerna = [
+                ['nama' => 'SAMPOERNA MILD 16', 'umum' => 40000, 'karyawan' => 37000],
+                ['nama' => 'SAMPOERNA MILD MENTHOL 16', 'umum' => 40000, 'karyawan' => 37000],
+                ['nama' => 'DJISAMSOE REFIL', 'umum' => 28000, 'karyawan' => 25000],
+                ['nama' => 'DJISAMSOE POLOS', 'umum' => 28000, 'karyawan' => 25000],
+                ['nama' => 'MARLBORO MERAH', 'umum' => 55000, 'karyawan' => 55000],
+                ['nama' => 'MARLBORO PUTIH', 'umum' => 60000, 'karyawan' => 55000],
+                ['nama' => 'MARLBORO ICE BURST', 'umum' => 60000, 'karyawan' => 55000],
+                ['nama' => 'SAMPOERNA PRIMA KRETEK', 'umum' => 20000, 'karyawan' => 20000],
+                ['nama' => 'SAMPOERNA KRETEK 12', 'umum' => 20000, 'karyawan' => 20000],
+                ['nama' => 'MARLBORO BOLONG 20', 'umum' => 45000, 'karyawan' => 42000],
+                ['nama' => 'MARLBORO BOLONG 12', 'umum' => 30000, 'karyawan' => 26000],
+                ['nama' => 'MARLBORO KRETEK MERAH', 'umum' => 20000, 'karyawan' => 15000],
+                ['nama' => 'TWIST 16 ROYAL', 'umum' => 30000, 'karyawan' => 28000],
+                ['nama' => 'TWIST 16 PRIME MILD', 'umum' => 30000, 'karyawan' => 25000],
+            ];
 
-            // --- PRODUK 2 ---
-            $prod2 = Produk::create([
-                'brand_id'     => $sampoerna->id,
-                'nama_produk'  => 'Dji Sam Soe',
-                'harga_umum'   => 15000,
-                'harga_khusus' => 14000,
-                'stok'         => 25
-            ]);
+            // D. LIST HARGA ADDITIONAL CIGARETTES
+            $listAdditional = [
+                ['nama' => 'CAMEL PURPLE 12', 'umum' => 25000, 'karyawan' => 22000],
+                ['nama' => 'DUNHIL HITAM 16', 'umum' => 35000, 'karyawan' => 33000],
+                ['nama' => 'DUNHIL HITAM 12', 'umum' => 30000, 'karyawan' => 25000],
+                ['nama' => 'GALANG BARU 12', 'umum' => 25000, 'karyawan' => 20000],
+                ['nama' => 'SAMSOE MAGNUM BLACK', 'umum' => 30000, 'karyawan' => 28000],
+            ];
 
-            RiwayatStok::create([
-                'produk_id'  => $prod2->id,
-                'stok_awal'  => 0,
-                'stok_masuk' => 25,
-                'stok_akhir' => 25,
-                'keterangan' => 'Stok Awal System',
-                'created_at' => now()->subDays(2)
-            ]);
+            // Fungsi Helper untuk Insert Produk & Riwayat Sekaligus
+            $insertProducts = function ($listData, $brandId) use ($stokAwalDefault) {
+                foreach ($listData as $item) {
+                    $prod = Produk::create([
+                        'brand_id'     => $brandId,
+                        'nama_produk'  => $item['nama'],
+                        'harga_umum'   => $item['umum'],
+                        'harga_khusus' => $item['karyawan'],
+                        'stok'         => $stokAwalDefault
+                    ]);
 
+                    RiwayatStok::create([
+                        'produk_id'  => $prod->id,
+                        'stok_awal'  => 0,
+                        'stok_masuk' => $stokAwalDefault,
+                        'stok_akhir' => $stokAwalDefault,
+                        'keterangan' => 'Stok Awal System',
+                        'created_at' => now()->subDays(2)
+                    ]);
+                }
+            };
 
-            // --- PRODUK 3 ---
-            $prod3 = Produk::create([
-                'brand_id'     => $dJarum->id,
-                'nama_produk'  => 'LA Bold',
-                'harga_umum'   => 40000,
-                'harga_khusus' => 38000,
-                'stok'         => 16
-            ]);
+            // Eksekusi Insert
+            $insertProducts($listDjarum, $djarum->id);
+            $insertProducts($listGudangGaram, $gudangGaram->id);
+            $insertProducts($listSampoerna, $sampoerna->id);
+            $insertProducts($listAdditional, $additional->id);
 
-            RiwayatStok::create([
-                'produk_id'  => $prod3->id,
-                'stok_awal'  => 0,
-                'stok_masuk' => 16,
-                'stok_akhir' => 16,
-                'keterangan' => 'Stok Awal System',
-                'created_at' => now()->subDays(2)
-            ]);
-
-            $this->command->info('✅ Produk & Riwayat Stok berhasil dibuat.');
+            $this->command->info('✅ Seluruh Produk & Riwayat Stok dari Excel berhasil diinput.');
 
             // ------------------------------------------------------------------
             // 5. DATA TRANSAKSI (Simulasi)
             // ------------------------------------------------------------------
 
-            // --- Transaksi 1: Kasir menjual 5 Dji Sam Soe ---
-            $qty1 = 5;
-            $harga1 = $prod2->harga_khusus; // Ambil harga khusus
-            $subtotal1 = $harga1 * $qty1;
-            $uangBayar1 = 100000;
+            // Ambil sample produk dari DB untuk simulasi transaksi
+            $sampleProdKhusus = Produk::where('nama_produk', 'DJISAMSOE POLOS')->first();
+            $sampleProdUmum   = Produk::where('nama_produk', 'LA BOLD 20')->first();
 
-            // A. Header
+            // --- Transaksi 1: Karyawan Beli DJISAMSOE POLOS ---
+            $qty1 = 5;
+            $harga1 = $sampleProdKhusus->harga_khusus; // Ambil harga karyawan
+            $subtotal1 = $harga1 * $qty1;
+            $uangBayar1 = 150000;
+
             $transaksi1 = Transaksi::create([
                 'user_id'              => $userKasir->id,
-                'kategori_id'          => 2,
+                'kategori_id'          => $khusus->id, // Karyawan
                 'metode_pembayaran_id' => $umumCash->id,
-                'nama_pelanggan'       => 'Budi Santoso',
+                'nama_pelanggan'       => 'Budi Santoso (Karyawan)',
                 'tanggal'              => now(),
                 'total'                => $subtotal1,
                 'bayar'                => $uangBayar1,
@@ -168,29 +196,25 @@ class DatabaseSeeder extends Seeder
                 'status'               => 'success'
             ]);
 
-            // B. Detail
             TransaksiDetail::create([
                 'transaksi_id' => $transaksi1->id,
-                'produk_id'    => $prod2->id,
-                'brand_id'     => $prod2->brand_id,
+                'produk_id'    => $sampleProdKhusus->id,
+                'brand_id'     => $sampleProdKhusus->brand_id,
                 'harga'        => $harga1,
                 'qty'          => $qty1,
                 'subtotal'     => $subtotal1
             ]);
 
-            // C. Kurangi Stok Master (Simulasi barang keluar)
-            $prod2->decrement('stok', $qty1);
+            $sampleProdKhusus->decrement('stok', $qty1);
 
-
-            // --- Transaksi 2: Kasir menjual 1 LA Bold (Kemarin) ---
+            // --- Transaksi 2: Pelanggan Umum Beli LA BOLD 20 via QRIS (Kemarin) ---
             $qty2 = 1;
-            $harga2 = $prod3->harga_umum; // Ambil harga umum
+            $harga2 = $sampleProdUmum->harga_umum; // Ambil harga umum
             $subtotal2 = $harga2 * $qty2;
 
-            // A. Header
             $transaksi2 = Transaksi::create([
                 'user_id'              => $userKasir->id,
-                'kategori_id'          => 1,
+                'kategori_id'          => $umum->id, // Umum
                 'metode_pembayaran_id' => $umumQris->id,
                 'nama_pelanggan'       => 'Siti Aminah',
                 'tanggal'              => now()->subDay(),
@@ -200,21 +224,19 @@ class DatabaseSeeder extends Seeder
                 'status'               => 'success'
             ]);
 
-            // B. Detail
             TransaksiDetail::create([
                 'transaksi_id' => $transaksi2->id,
-                'produk_id'    => $prod3->id,
-                'brand_id'     => $prod3->brand_id,
+                'produk_id'    => $sampleProdUmum->id,
+                'brand_id'     => $sampleProdUmum->brand_id,
                 'harga'        => $harga2,
                 'qty'          => $qty2,
                 'subtotal'     => $subtotal2
             ]);
 
-            // C. Kurangi Stok Master
-            $prod3->decrement('stok', $qty2);
+            $sampleProdUmum->decrement('stok', $qty2);
 
             DB::commit();
-            $this->command->info('🚀 SEMUA SEEDER BERHASIL DIJALANKAN!');
+            $this->command->info('🚀 SEMUA SEEDER BERHASIL DIJALANKAN DENGAN DATA BARU!');
 
         } catch (\Exception $e) {
             DB::rollBack();

@@ -30,13 +30,12 @@ class ProdukController extends Controller
 
     public function search($keyword)
     {
-        $produk = Produk::with(['brand', 'kategori'])
-            ->where('nama_produk', 'like', "%$keyword%")
-            ->orWhereHas('brand', function ($query) use ($keyword) {
-                $query->where('nama_brand', 'like', "%$keyword%");
-            })
-            ->orWhereHas('kategori', function ($query) use ($keyword) {
-                $query->where('nama_kategori', 'like', "%$keyword%");
+        $produk = Produk::with(['brand'])
+            ->where(function ($q) use ($keyword) {
+                $q->where('nama_produk', 'like', "%$keyword%")
+                    ->orWhereHas('brand', function ($query) use ($keyword) {
+                        $query->where('nama_brand', 'like', "%$keyword%");
+                    });
             })
             ->orderBy('id')
             ->paginate(6);
@@ -155,8 +154,8 @@ class ProdukController extends Controller
 
         if ($riwayat->isEmpty()) {
             return response()->json([
-            'success' => false,
-            'message' => 'Data Tidak Ditemukan'
+                'success' => false,
+                'message' => 'Data Tidak Ditemukan'
             ], 404);
         }
 
