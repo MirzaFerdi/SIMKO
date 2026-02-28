@@ -8,6 +8,7 @@ use App\Models\TransaksiDetail;
 use App\Models\Produk;
 use App\Models\Kategori;
 use App\Models\MetodePembayaran;
+use App\Models\RiwayatStok;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -92,32 +93,32 @@ class TransaksiController extends Controller
             $kategoriPelanggan = Kategori::find($request->kategori_id);
             $isKhusus = $kategoriPelanggan && stripos($kategoriPelanggan->nama_kategori, 'Khusus') !== false;
 
+            // --- LOOPING PERTAMA: Validasi dan Persiapan Data ---
             foreach ($request->items as $item) {
-                $produk = Produk::lockForUpdate()->find($item['produk_id']); // Lock baris agar tidak race condition
+                $produk = Produk::lockForUpdate()->find($item['produk_id']);
 
-                // Cek Stok
                 if ($produk->stok < $item['qty']) {
                     return response()->json(['success' => false, 'message' => "Stok {$produk->nama_produk} tidak mencukupi. Sisa: {$produk->stok}"], 400);
                 }
 
-                // Tentukan Harga (Bisa dikembangkan logic diskon disini berdasarkan kategori_id)
                 $harga_final = $isKhusus ? $produk->harga_khusus : $produk->harga_umum;
                 $subtotal = $harga_final * $item['qty'];
                 $total_belanja += $subtotal;
 
-                // Masukkan ke array sementara
                 $list_barang_fix[] = [
-                    'produk_id' => $produk->id,
-                    'brand_id'  => $produk->brand_id, // Ambil otomatis dari master produk
-                    'harga'     => $harga_final,
-                    'qty'       => $item['qty'],
-                    'subtotal'  => $subtotal
+                    'produk_id'  => $produk->id,
+                    'brand_id'   => $produk->brand_id,
+                    'harga'      => $harga_final,
+                    'qty'        => $item['qty'],
+                    'subtotal'   => $subtotal,
+
+                    // --- TAMBAHAN UNTUK RIWAYAT STOK ---
+                    'stok_awal'  => $produk->stok, // Catat stok sebelum transaksi
+                    'stok_akhir' => $produk->stok - $item['qty'] // Hitung sisa stok
                 ];
             }
 
-            // 4. VALIDASI PEMBAYARAN (Khusus jika bukan BON)
-            // Jika status Selesai (Cash/QRIS), uang bayar harus >= total
-            // Jika status Pending (BON), uang bayar boleh 0 atau DP (terserah kebijakan toko)
+            // 4. VALIDASI PEMBAYARAN
             if ($statusTransaksi == 'selesai') {
                 if ($request->bayar < $total_belanja) {
                     return response()->json(['success' => false, 'message' => 'Uang pembayaran kurang'], 400);
@@ -126,19 +127,22 @@ class TransaksiController extends Controller
 
             // 5. SIMPAN HEADER TRANSAKSI
             $transaksi = Transaksi::create([
-                'user_id'              => $request->user_id, // Atau auth()->id()
+                'user_id'              => $request->user_id,
                 'kategori_id'          => $request->kategori_id,
                 'metode_pembayaran_id' => $request->metode_pembayaran_id,
-                'nama_pelanggan'       => $request->nama_pelanggan ?? 'Umum', // Jika null diisi 'Umum'
+                'nama_pelanggan'       => $request->nama_pelanggan ?? 'Umum',
                 'tanggal'              => now(),
                 'total'                => $total_belanja,
                 'bayar'                => $request->bayar,
-                'kembalian'            => $request->bayar - $total_belanja, // Minus berarti hutang (jika BON)
-                'status'               => $statusTransaksi, // <--- ISI STATUS DISINI
+                'kembalian'            => $request->bayar - $total_belanja,
+                'status'               => $statusTransaksi,
             ]);
 
-            // 6. SIMPAN DETAIL & KURANGI STOK
+            // 6. SIMPAN DETAIL, KURANGI STOK, & CATAT RIWAYAT
+            // --- LOOPING KEDUA: Eksekusi Database ---
             foreach ($list_barang_fix as $barang) {
+
+                // A. Simpan Detail
                 TransaksiDetail::create([
                     'transaksi_id' => $transaksi->id,
                     'produk_id'    => $barang['produk_id'],
@@ -148,8 +152,18 @@ class TransaksiController extends Controller
                     'subtotal'     => $barang['subtotal']
                 ]);
 
-                // Update Stok (Tetap dikurangi meskipun BON/Pending, karena barang sudah keluar)
+                // B. Update Stok Master Produk
                 Produk::where('id', $barang['produk_id'])->decrement('stok', $barang['qty']);
+
+                // C. Simpan ke Riwayat Stok (Fitur Baru)
+                RiwayatStok::create([
+                    'produk_id'   => $barang['produk_id'],
+                    'stok_awal'   => $barang['stok_awal'],
+                    'stok_masuk'  => 0, // 0 karena ini transaksi keluar
+                    'stok_keluar' => $barang['qty'], // Jumlah yang dibeli
+                    'stok_akhir'  => $barang['stok_akhir'], // Sisa stok
+                    'keterangan'  => 'Penjualan Transaksi #' . $transaksi->id
+                ]);
             }
 
             DB::commit();
