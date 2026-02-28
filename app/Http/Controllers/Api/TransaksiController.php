@@ -29,10 +29,26 @@ class TransaksiController extends Controller
     public function showPaginate()
     {
         $data = Transaksi::with(['user', 'detail.produk', 'detail.brand', 'kategori', 'metodePembayaran'])
+            ->where('status', 'BON(pending)')
             ->orderBy('id')
             ->paginate(6);
 
         return response()->json(['success' => true, 'data' => $data]);
+    }
+
+    public function searchPending($keyword)
+    {
+        $data = Transaksi::with(['user', 'detail.produk', 'detail.brand'])
+            ->where('status', 'BON(pending)')
+            ->where('nama_pelanggan', 'like', "%{$keyword}%")
+            ->orderByDesc('tanggal')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Daftar Transaksi BON (Pending) dengan keyword: {$keyword}",
+            'data'    => $data
+        ]);
     }
 
     public function store(Request $request)
@@ -84,7 +100,7 @@ class TransaksiController extends Controller
             // 2. CEK STATUS TRANSAKSI (Selesai vs Pending)
             $metodeBayar = MetodePembayaran::find($request->metode_pembayaran_id);
             $isBon = stripos($metodeBayar->nama_metode, 'BON') !== false;
-            $statusTransaksi = $isBon ? 'pending' : 'selesai';
+            $statusTransaksi = $isBon ? 'BON(pending)' : 'Selesai';
 
             // 3. HITUNG TOTAL & CEK STOK
             $total_belanja = 0;
@@ -119,7 +135,7 @@ class TransaksiController extends Controller
             }
 
             // 4. VALIDASI PEMBAYARAN
-            if ($statusTransaksi == 'selesai') {
+            if ($statusTransaksi == 'Selesai') {
                 if ($request->bayar < $total_belanja) {
                     return response()->json(['success' => false, 'message' => 'Uang pembayaran kurang'], 400);
                 }
@@ -179,16 +195,26 @@ class TransaksiController extends Controller
         }
     }
 
-    public function updateStatus()
+    public function updateStatus(Request $request)
     {
+        // Validasi input
+        $validator = Validator::make($request->all(), [
+            'transaksi_ids' => 'required|array',
+            'transaksi_ids.*' => 'required|exists:transaksi,id'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
         try {
-            $affectedRows = Transaksi::where('status', 'pending')->update([
-                'status'    => 'success',
-
-                'bayar'     => DB::raw('total'),
-
-                'kembalian' => 0
-            ]);
+            $affectedRows = Transaksi::whereIn('id', $request->transaksi_ids)
+                ->where('status', 'BON(pending)')
+                ->update([
+                    'status'    => 'Selesai',
+                    'bayar'     => DB::raw('total'),
+                    'kembalian' => 0
+                ]);
 
             return response()->json([
                 'success' => true,
@@ -247,8 +273,8 @@ class TransaksiController extends Controller
     public function pending()
     {
         $data = Transaksi::with(['user', 'detail.produk', 'detail.brand', 'kategori', 'metodePembayaran'])
-            ->where('status', 'pending') // <--- Filter Kuncinya Disini
-            ->orderByDesc('tanggal')     // Urutkan dari yang terbaru
+            ->where('status', 'BON(pending)')
+            ->orderByDesc('tanggal')
             ->get();
 
         return response()->json([

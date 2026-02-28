@@ -150,7 +150,7 @@ class ProdukController extends Controller
             });
         }
 
-        $riwayat = $query->orderByDesc('created_at')->get();
+        $riwayat = $query->orderByAsc('created_at')->get();
 
         if ($riwayat->isEmpty()) {
             return response()->json([

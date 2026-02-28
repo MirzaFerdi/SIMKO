@@ -105,6 +105,7 @@ return new class extends Migration
 
             $table->integer('stok_awal');
             $table->integer('stok_masuk');
+            $table->integer('stok_keluar');
             $table->integer('stok_akhir');
 
             $table->string('keterangan')->nullable();

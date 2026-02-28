@@ -75,7 +75,7 @@ class DatabaseSeeder extends Seeder
             // ------------------------------------------------------------------
             // 4. DATA PRODUK & RIWAYAT STOK (Sistem Looping dari Array)
             // ------------------------------------------------------------------
-            $stokAwalDefault = 50; // Set default stok semua rokok 50 bungkus
+            $stokAwalDefault = 0;
 
             // A. LIST HARGA DJARUM
             $listDjarum = [
@@ -155,6 +155,7 @@ class DatabaseSeeder extends Seeder
                         'produk_id'  => $prod->id,
                         'stok_awal'  => 0,
                         'stok_masuk' => $stokAwalDefault,
+                        'stok_keluar'=> 0,
                         'stok_akhir' => $stokAwalDefault,
                         'keterangan' => 'Stok Awal System',
                         'created_at' => now()->subDays(2)
@@ -193,7 +194,7 @@ class DatabaseSeeder extends Seeder
                 'total'                => $subtotal1,
                 'bayar'                => $uangBayar1,
                 'kembalian'            => $uangBayar1 - $subtotal1,
-                'status'               => 'success'
+                'status'               => 'BON(Pending)'
             ]);
 
             TransaksiDetail::create([
@@ -221,7 +222,7 @@ class DatabaseSeeder extends Seeder
                 'total'                => $subtotal2,
                 'bayar'                => $subtotal2,
                 'kembalian'            => 0,
-                'status'               => 'success'
+                'status'               => 'BON(Pending)'
             ]);
 
             TransaksiDetail::create([

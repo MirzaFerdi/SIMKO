@@ -44,9 +44,10 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('transaksi/pending', [TransaksiController::class, 'pending']);
     Route::get('transaksi/paginate', [TransaksiController::class, 'showPaginate']);
+    Route::get('transaksi/search-paginate/{keyword}', [TransaksiController::class, 'searchPending']);
     Route::get('transaksi/produkterlaris', [TransaksiController::class, 'getProdukTerlaris']);
     Route::get('transaksi/produkterjual/{kategori_id}', [TransaksiController::class, 'getProdukTerjualPerBulanByKategori']);
-    Route::post('transaksi/update-status', [TransaksiController::class, 'updateStatus']);
     Route::post('laporan/rekap', [LaporanController::class, 'rekap']);
+    Route::put('transaksi/update-status', [TransaksiController::class, 'updateStatus']);
     Route::apiResource('transaksi', TransaksiController::class);
 });
