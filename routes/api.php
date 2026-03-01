@@ -33,6 +33,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('metode-pembayaran/kategori/{kategori_id}', [MetodePembayaranController::class, 'showByKategori']);
     Route::apiResource('metode-pembayaran', MetodePembayaranController::class);
 
+    Route::get('produk/kategori-produk', [ProdukController::class, 'getKategoriProduk']);
+
     Route::get('produk/merch/all', [ProdukController::class, 'getMerch']);
     Route::get('produk/merch/paginate', [ProdukController::class, 'paginateMerch']);
     Route::get('produk/merch/search/{keyword}', [ProdukController::class, 'searchMerch']);

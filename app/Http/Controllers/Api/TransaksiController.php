@@ -270,16 +270,26 @@ class TransaksiController extends Controller
         ]);
     }
 
-    public function pending()
+    public function pending(Request $request)
     {
-        $data = Transaksi::with(['user', 'detail.produk', 'detail.brand', 'kategori', 'metodePembayaran'])
-            ->where('status', 'BON(pending)')
-            ->orderByDesc('tanggal')
-            ->get();
+        $query = Transaksi::with(['user', 'detail.produk', 'detail.brand', 'kategori', 'metodePembayaran'])
+            ->whereHas('metodePembayaran', function ($q) {
+                $q->where('nama_metode', 'like', '%BON%');
+            });
+
+        if ($request->filter !== 'semua') {
+            $query->where('status', 'BON(pending)');
+        }
+
+        $data = $query->orderByDesc('tanggal')->get();
+
+        $pesan = $request->filter === 'semua'
+            ? 'Daftar Semua Transaksi BON (Pending & Lunas)'
+            : 'Daftar Transaksi BON (Hanya Pending)';
 
         return response()->json([
             'success' => true,
-            'message' => 'Daftar Transaksi BON (Pending)',
+            'message' => $pesan,
             'data'    => $data
         ]);
     }

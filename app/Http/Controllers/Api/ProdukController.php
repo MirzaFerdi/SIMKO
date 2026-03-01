@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Produk;
+use App\Models\RiwayatStok;
+use App\Models\KategoriProduk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Models\RiwayatStok;
 use Illuminate\Support\Facades\DB;
 
 class ProdukController extends Controller
@@ -41,6 +42,12 @@ class ProdukController extends Controller
             ->paginate(6);
 
         return response()->json(['success' => true, 'data' => $produk]);
+    }
+
+    public function getKategoriProduk()
+    {
+        $kategoriProduk = KategoriProduk::orderBy('id')->get();
+        return response()->json(['success' => true, 'data' => $kategoriProduk]);
     }
 
     public function getMerch()
@@ -85,10 +92,6 @@ class ProdukController extends Controller
         return response()->json(['success' => true, 'data' => $produk]);
     }
 
-    // ==========================================
-    // FUNGSI CRUD & STOK
-    // ==========================================
-
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -96,7 +99,7 @@ class ProdukController extends Controller
             'kategori_produk_id' => 'required|exists:kategori_produk,id', // Ubah jadi required agar rapi
             'nama_produk'        => 'required|string|unique:produk,nama_produk',
             'harga_umum'         => 'required|numeric',
-            'harga_khusus'       => 'required|numeric',
+            'harga_khusus'       => 'nullable|numeric',
             'stok'               => 'required|integer',
         ]);
 
