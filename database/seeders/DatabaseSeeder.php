@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Brand;
 use App\Models\Kategori;
+use App\Models\KategoriProduk;
 use App\Models\MetodePembayaran;
 use App\Models\Produk;
 use App\Models\Role;
@@ -29,12 +30,16 @@ class DatabaseSeeder extends Seeder
             // 1. DATA MASTER UTAMA (Role, Kategori, Brand)
             // ------------------------------------------------------------------
 
-            $roleAdmin = Role::create(['nama_role' => 'admin']);
+            $roleAdmin = Role::create(['nama_role' => 'Admin']);
             $roleKasir = Role::create(['nama_role' => 'Kasir']);
+            $rolePIC   = Role::create(['nama_role' => 'PIC']);
             $this->command->info('✅ Role berhasil dibuat.');
 
             $umum   = Kategori::create(['nama_kategori' => 'Umum']);
             $khusus = Kategori::create(['nama_kategori' => 'Khusus (Karyawan)']);
+
+            $katRokok = KategoriProduk::create(['nama_kategori_produk' => 'Rokok']);
+            $katMerch = KategoriProduk::create(['nama_kategori_produk' => 'Merchandise']);
 
             // Buat Brand sesuai Gambar
             $djarum      = Brand::create(['nama_brand' => 'Djarum']);
@@ -50,16 +55,37 @@ class DatabaseSeeder extends Seeder
 
             User::create([
                 'role_id'  => $roleAdmin->id,
-                'username' => 'admin',
-                'nama'     => 'Admin System',
-                'password' => Hash::make('admin123'),
+                'username' => 'deden',
+                'nama'     => 'Deden',
+                'password' => Hash::make('deden2026'),
+            ]);
+
+            User::create([
+                'role_id'  => $roleAdmin->id,
+                'username' => 'arimbi',
+                'nama'     => 'Arimbi',
+                'password' => Hash::make('arimbi2026'),
+            ]);
+
+            User::create([
+                'role_id'  => $rolePIC->id,
+                'username' => 'yavi',
+                'nama'     => 'Yavi',
+                'password' => Hash::make('yavi2026'),
+            ]);
+
+            User::create([
+                'role_id'  => $rolePIC->id,
+                'username' => 'yoga',
+                'nama'     => 'Yoga',
+                'password' => Hash::make('yoga2026'),
             ]);
 
             $userKasir = User::create([
                 'role_id'  => $roleKasir->id,
-                'username' => 'kasir',
-                'nama'     => 'Kasir Utama',
-                'password' => Hash::make('kasir123'),
+                'username' => 'ken',
+                'nama'     => 'Ken',
+                'password' => Hash::make('ken2026'),
             ]);
 
             $this->command->info('✅ User Admin & Kasir berhasil dibuat.');
@@ -75,7 +101,7 @@ class DatabaseSeeder extends Seeder
             // ------------------------------------------------------------------
             // 4. DATA PRODUK & RIWAYAT STOK (Sistem Looping dari Array)
             // ------------------------------------------------------------------
-            $stokAwalDefault = 0;
+            $stokAwalDefault = 5;
 
             // A. LIST HARGA DJARUM
             $listDjarum = [
@@ -141,9 +167,10 @@ class DatabaseSeeder extends Seeder
             ];
 
             // Fungsi Helper untuk Insert Produk & Riwayat Sekaligus
-            $insertProducts = function ($listData, $brandId) use ($stokAwalDefault) {
+            $insertProducts = function ($listData, $brandId, $kategoriProdukId) use ($stokAwalDefault) {
                 foreach ($listData as $item) {
                     $prod = Produk::create([
+                        'kategori_produk_id' => $kategoriProdukId,
                         'brand_id'     => $brandId,
                         'nama_produk'  => $item['nama'],
                         'harga_umum'   => $item['umum'],
@@ -155,7 +182,7 @@ class DatabaseSeeder extends Seeder
                         'produk_id'  => $prod->id,
                         'stok_awal'  => 0,
                         'stok_masuk' => $stokAwalDefault,
-                        'stok_keluar'=> 0,
+                        'stok_keluar' => 0,
                         'stok_akhir' => $stokAwalDefault,
                         'keterangan' => 'Stok Awal System',
                         'created_at' => now()->subDays(2)
@@ -164,12 +191,30 @@ class DatabaseSeeder extends Seeder
             };
 
             // Eksekusi Insert
-            $insertProducts($listDjarum, $djarum->id);
-            $insertProducts($listGudangGaram, $gudangGaram->id);
-            $insertProducts($listSampoerna, $sampoerna->id);
-            $insertProducts($listAdditional, $additional->id);
+            $insertProducts($listDjarum, $djarum->id, $katRokok->id);
+            $insertProducts($listGudangGaram, $gudangGaram->id, $katRokok->id);
+            $insertProducts($listSampoerna, $sampoerna->id, $katRokok->id);
+            $insertProducts($listAdditional, $additional->id, $katRokok->id);
 
-            $this->command->info('✅ Seluruh Produk & Riwayat Stok dari Excel berhasil diinput.');
+            $merchKorek = Produk::create([
+                'kategori_produk_id' => $katMerch->id,
+                'brand_id'           => null,
+                'nama_produk'        => 'Korek Api Magnolia',
+                'harga_umum'         => 8000,
+                'harga_khusus'       => 0,
+                'stok'               => $stokAwalDefault
+            ]);
+
+            RiwayatStok::create([
+                'produk_id'   => $merchKorek->id,
+                'stok_awal'   => 0,
+                'stok_masuk'  => $stokAwalDefault,
+                'stok_keluar' => 0,
+                'stok_akhir'  => $stokAwalDefault,
+                'keterangan'  => 'Stok Awal System',
+                'created_at'  => now()->subDays(2)
+            ]);
+            $this->command->info('✅ Seluruh Produk Rokok & Merchandise berhasil diinput.');
 
             // ------------------------------------------------------------------
             // 5. DATA TRANSAKSI (Simulasi)
@@ -194,7 +239,7 @@ class DatabaseSeeder extends Seeder
                 'total'                => $subtotal1,
                 'bayar'                => $uangBayar1,
                 'kembalian'            => $uangBayar1 - $subtotal1,
-                'status'               => 'BON(Pending)'
+                'status'               => 'Selesai'
             ]);
 
             TransaksiDetail::create([
@@ -222,7 +267,7 @@ class DatabaseSeeder extends Seeder
                 'total'                => $subtotal2,
                 'bayar'                => $subtotal2,
                 'kembalian'            => 0,
-                'status'               => 'BON(Pending)'
+                'status'               => 'Selesai'
             ]);
 
             TransaksiDetail::create([
@@ -236,9 +281,36 @@ class DatabaseSeeder extends Seeder
 
             $sampleProdUmum->decrement('stok', $qty2);
 
+            $qty3 = 2;
+            $harga3 = $merchKorek->harga_umum;
+            $subtotal3 = $harga3 * $qty3;
+            $uangBayar3 = 20000;
+
+            $transaksi3 = Transaksi::create([
+                'user_id'              => $userKasir->id,
+                'kategori_id'          => $khusus->id, // Pembelinya Karyawan!
+                'metode_pembayaran_id' => $umumCash->id,
+                'nama_pelanggan'       => 'Andi (Karyawan)',
+                'tanggal'              => now(),
+                'total'                => $subtotal3,
+                'bayar'                => $uangBayar3,
+                'kembalian'            => $uangBayar3 - $subtotal3,
+                'status'               => 'Selesai'
+            ]);
+
+            TransaksiDetail::create([
+                'transaksi_id' => $transaksi3->id,
+                'produk_id'    => $merchKorek->id,
+                'brand_id'     => $merchKorek->brand_id,
+                'harga'        => $harga3,
+                'qty'          => $qty3,
+                'subtotal'     => $subtotal3
+            ]);
+
+            $merchKorek->decrement('stok', $qty3);
+
             DB::commit();
             $this->command->info('🚀 SEMUA SEEDER BERHASIL DIJALANKAN DENGAN DATA BARU!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             $this->command->error('❌ Gagal seeding: ' . $e->getMessage());

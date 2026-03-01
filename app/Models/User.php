@@ -22,6 +22,10 @@ class User extends Authenticatable implements JWTSubject // Tambahkan implements
         'password' => 'hashed',
     ];
 
+    public function role(){
+        return $this->belongsTo(Role::class, 'role_id');
+    }
+
     // Wajib: Method 1 dari Interface JWTSubject
     public function getJWTIdentifier()
     {

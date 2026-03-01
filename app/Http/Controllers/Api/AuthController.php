@@ -60,11 +60,13 @@ class AuthController extends Controller
     public function me()
     {
         $user = auth()->user();
-        
+
         if (!$user) {
             return response()->json(['message' => 'Anda sudah logout'], 401);
         }
-        
+
+        $user->load('role');
+
         return response()->json($user);
     }
 

@@ -11,12 +11,12 @@ use Illuminate\Support\Facades\DB;
 
 class ProdukController extends Controller
 {
+
     public function index()
     {
-        // Load relasi brand dan kategori
         return response()->json([
             'success' => true,
-            'data'    => Produk::with(['brand', 'kategori'])->orderBy('id')->get()
+            'data'    => Produk::with(['brand', 'kategoriProduk'])->orderBy('id')->get()
         ]);
     }
 
@@ -24,13 +24,13 @@ class ProdukController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data'    => Produk::with(['brand', 'kategori'])->orderBy('id')->paginate(6)
+            'data'    => Produk::with(['brand', 'kategoriProduk'])->orderBy('id')->paginate(6)
         ]);
     }
 
     public function search($keyword)
     {
-        $produk = Produk::with(['brand'])
+        $produk = Produk::with(['brand', 'kategoriProduk'])
             ->where(function ($q) use ($keyword) {
                 $q->where('nama_produk', 'like', "%$keyword%")
                     ->orWhereHas('brand', function ($query) use ($keyword) {
@@ -43,21 +43,68 @@ class ProdukController extends Controller
         return response()->json(['success' => true, 'data' => $produk]);
     }
 
+    public function getMerch()
+    {
+        $produk = Produk::with(['brand', 'kategoriProduk'])
+            ->whereHas('kategoriProduk', function ($q) {
+                $q->where('nama_kategori_produk', 'Merchandise');
+            })
+            ->orderBy('id')
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $produk]);
+    }
+
+    public function paginateMerch()
+    {
+        $produk = Produk::with(['brand', 'kategoriProduk'])
+            ->whereHas('kategoriProduk', function ($q) {
+                $q->where('nama_kategori_produk', 'Merchandise');
+            })
+            ->orderBy('id')
+            ->paginate(6);
+
+        return response()->json(['success' => true, 'data' => $produk]);
+    }
+
+    public function searchMerch($keyword)
+    {
+        $produk = Produk::with(['brand', 'kategoriProduk'])
+            ->whereHas('kategoriProduk', function ($q) {
+                $q->where('nama_kategori_produk', 'Merchandise'); // Pastikan hanya merch
+            })
+            ->where(function ($q) use ($keyword) {
+                $q->where('nama_produk', 'like', "%$keyword%")
+                    ->orWhereHas('brand', function ($query) use ($keyword) {
+                        $query->where('nama_brand', 'like', "%$keyword%");
+                    });
+            })
+            ->orderBy('id')
+            ->paginate(6);
+
+        return response()->json(['success' => true, 'data' => $produk]);
+    }
+
+    // ==========================================
+    // FUNGSI CRUD & STOK
+    // ==========================================
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'brand_id'    => 'required|exists:brand,id',
-            'nama_produk' => 'required|string|unique:produk,nama_produk',
-            'harga_umum'   => 'required|numeric',
-            'harga_khusus' => 'required|numeric',
-            'stok'        => 'required|integer',
+            'brand_id'           => 'nullable|exists:brand,id',
+            'kategori_produk_id' => 'required|exists:kategori_produk,id', // Ubah jadi required agar rapi
+            'nama_produk'        => 'required|string|unique:produk,nama_produk',
+            'harga_umum'         => 'required|numeric',
+            'harga_khusus'       => 'required|numeric',
+            'stok'               => 'required|integer',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Produk Dengan Nama Tersebut Sudah Ada',
-                'errors' => $validator->errors()
+                'message' => 'Validasi Gagal',
+                'errors'  => $validator->errors()
             ], 422);
         }
 
@@ -92,11 +139,12 @@ class ProdukController extends Controller
             $produk->update(['stok' => $stokAkhir]);
 
             RiwayatStok::create([
-                'produk_id'  => $produk->id,
-                'stok_awal'  => $stokAwal,
-                'stok_masuk' => $stokMasuk,
-                'stok_akhir' => $stokAkhir,
-                'keterangan' => $request->keterangan ?? 'Penambahan Stok Manual',
+                'produk_id'   => $produk->id,
+                'stok_awal'   => $stokAwal,
+                'stok_masuk'  => $stokMasuk,
+                'stok_keluar' => 0,
+                'stok_akhir'  => $stokAkhir,
+                'keterangan'  => $request->keterangan ?? 'Penambahan Stok Manual',
             ]);
 
             DB::commit();
@@ -105,10 +153,10 @@ class ProdukController extends Controller
                 'success' => true,
                 'message' => 'Stok berhasil ditambahkan',
                 'data' => [
-                    'nama_produk' => $produk->nama_produk,
-                    'stok_sebelumnya' => $stokAwal,
+                    'nama_produk'      => $produk->nama_produk,
+                    'stok_sebelumnya'  => $stokAwal,
                     'stok_ditambahkan' => $stokMasuk,
-                    'stok_sekarang' => $stokAkhir
+                    'stok_sekarang'    => $stokAkhir
                 ]
             ]);
         } catch (\Exception $e) {
@@ -126,7 +174,7 @@ class ProdukController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $riwayat
+            'data'    => $riwayat
         ]);
     }
 
@@ -150,7 +198,7 @@ class ProdukController extends Controller
             });
         }
 
-        $riwayat = $query->orderByAsc('created_at')->get();
+        $riwayat = $query->orderBy('created_at', 'asc')->get();
 
         if ($riwayat->isEmpty()) {
             return response()->json([
@@ -167,20 +215,23 @@ class ProdukController extends Controller
 
     public function show($id)
     {
-        $produk = Produk::with(['brand', 'kategori'])->find($id);
+        // PERBAIKAN: Ubah 'kategori' menjadi 'kategoriProduk'
+        $produk = Produk::with(['brand', 'kategoriProduk'])->find($id);
         if (!$produk) return response()->json(['success' => false, 'message' => 'Produk Tidak Ditemukan'], 404);
         return response()->json(['success' => true, 'data' => $produk]);
     }
 
     public function showLowStock()
     {
-        $produk = Produk::with(['brand', 'kategori'])->orderBy('stok', 'asc')->limit(3)->get();
+        // PERBAIKAN: Ubah 'kategori' menjadi 'kategoriProduk'
+        $produk = Produk::with(['brand', 'kategoriProduk'])->orderBy('stok', 'asc')->limit(3)->get();
         return response()->json(['success' => true, 'data' => $produk]);
     }
 
     public function showBrand($brand_id)
     {
-        $produk = Produk::with(['brand', 'kategori'])->where('brand_id', $brand_id)->get();
+        // PERBAIKAN: Ubah 'kategori' menjadi 'kategoriProduk'
+        $produk = Produk::with(['brand', 'kategoriProduk'])->where('brand_id', $brand_id)->get();
         return response()->json(['success' => true, 'data' => $produk]);
     }
 

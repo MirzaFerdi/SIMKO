@@ -17,7 +17,8 @@ class LaporanController extends Controller
             'kategori_id'          => 'nullable|exists:kategori,id',
             'metode_pembayaran_id' => 'nullable|exists:metode_pembayaran,id',
             'brand_id'             => 'nullable|exists:brand,id',
-            'produk_id'            => 'nullable|exists:produk,id'
+            'produk_id'            => 'nullable|exists:produk,id',
+            'kategori_produk_id'   => 'nullable|exists:kategori_produk,id'
         ]);
 
         if ($validator->fails()) {
@@ -55,6 +56,12 @@ class LaporanController extends Controller
             });
         }
 
+        if ($request->filled('kategori_produk_id')) {
+            $query->whereHas('detail.produk', function ($q) use ($request) {
+                $q->where('kategori_produk_id', $request->kategori_produk_id);
+            });
+        }
+
         $data = $query->orderByDesc('tanggal')
             ->get()
             ->map(function ($transaksi) {
@@ -70,7 +77,7 @@ class LaporanController extends Controller
                     'items'              => $transaksi->detail->map(function ($item) {
                         return [
                             'nama_produk' => $item->produk->nama_produk,
-                            'nama_brand'  => $item->brand->nama_brand,
+                            'nama_brand'  => $item->brand ? $item->brand->nama_brand : '-',
                             'qty'         => $item->qty,
                             'harga'       => $item->harga,
                             'subtotal'    => $item->subtotal
